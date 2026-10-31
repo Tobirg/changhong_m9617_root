@@ -1,0 +1,14 @@
+# Never commit device firmware dumps, patched images or sensitive backups.
+*.img
+*.IMG
+*.bin
+*.BIN
+*.apk
+*.APK
+*.key
+*.pem
+*.p12
+*.pfx
+*.log
+__pycache__/
+*.pyc
