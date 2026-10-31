@@ -26,8 +26,8 @@
 
 ## 3. Подготовка флешки и ПК
 
-Устанавливаем [python3](https://www.python.org/downloads/)
-Скачиваем скрипт [magisk_skipfix.py](https://raw.githubusercontent.com/Tobirg/tuvio_TO55UFGCV5_root/main/scripts/magisk_skipfix.py)
+Устанавливаем [python3](https://www.python.org/downloads/)  
+[Скачиваем скрипт](../scripts/magisk_skipfix.py)
 
 На ПК форматируйте флешку в **FAT32**, один раздел.
 Скачиваем последний [Magisk](https://github.com/topjohnwu/Magisk) и [Fluffy](https://github.com/mlm-games/Fluffy) и закидываем на флешку.
