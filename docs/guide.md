@@ -125,11 +125,6 @@ now create file BOOT_B.IMG
 ~~~text
 fatls usb 0:1
 ~~~
-**Останавливаем работу с USB**:
-~~~text
-usb stop
-~~~
-
 Ожидаемый ответ:
 ~~~text
 << MT5889 >># fatls usb 0:1
@@ -140,6 +135,14 @@ usb stop
   7734485   fluffy-4.5.1-universal.apk
 
 4 file(s), 1 dir(s)
+~~~
+
+**Останавливаем работу с USB**:
+~~~text
+usb stop
+~~~
+Ответ:
+~~~text
 << MT5889 >># usb stop
 stopping USB..
 ~~~
