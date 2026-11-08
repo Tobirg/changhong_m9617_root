@@ -1,0 +1,118 @@
+<resources>
+    <string name="app_name">RootMate</string>
+
+    <string name="section_factory">Инженерное меню</string>
+    <string name="uart_hint">Откроет нужную страницу</string>
+    <string name="enable_uart">Включить UART</string>
+
+    <string name="section_install">Подготовка</string>
+    <string name="install_magisk">Скачать и установить Magisk</string>
+
+    <string name="full_patch">Выбрать\nBOOT_*.IMG</string>
+
+    <string name="section_patch">Выберите один из способов</string>
+    <string name="patch_full_title">Полный автопатч оригинального образа</string>
+    <string name="patch_manual_title">Только фикс skip_initramfs после Magisk</string>
+    <string name="pick_input">Выбрать\nmagisk_patched-*.img</string>
+
+    <string name="open_factory_menu">Открыть меню</string>
+
+    <string name="permission_required_caption">Требуется разрешение</string>
+
+    <string name="perm_screen_title">Разрешения</string>
+    <string name="perm_storage_title">Доступ ко всем файлам</string>
+    <string name="perm_storage_desc">Нужен, чтобы выбирать boot-образы на флешке через встроенный файлпикер и сохранять результат патчинга рядом с исходным файлом.</string>
+    <string name="perm_install_title">Установка неизвестных приложений</string>
+    <string name="perm_install_desc">Нужно, чтобы установить Magisk, скачанный напрямую с GitHub.</string>
+    <string name="perm_status_granted">Разрешено</string>
+    <string name="perm_status_not_granted">Не разрешено</string>
+    <string name="perm_grant_button">Выдать разрешение</string>
+    <string name="perm_manage_button">Открыть настройки</string>
+    <string name="perm_done_button">Готово</string>
+
+    <string name="uninstall_app">Удалить RootMate</string>
+    <string name="busy_exit_title">Идёт патчинг</string>
+    <string name="busy_exit_message">Если выйти сейчас, операция может прерваться, а файл остаться неполным. Выйти?</string>
+    <string name="busy_exit_stay">Остаться</string>
+    <string name="busy_exit_leave">Выйти</string>
+
+    <string name="picker_internal">Внутренняя память</string>
+    <string name="picker_drive">Накопитель: %1$s</string>
+    <string name="picker_choose_drive">Выберите накопитель</string>
+    <string name="picker_no_drives">Накопители не найдены</string>
+    <string name="picker_up">.. (вверх)</string>
+    <string name="error_fmt">ОШИБКА: %1$s</string>
+    <string name="progress_preparing">Подготавливаю...</string>
+    <string name="picked_file">Выбран файл: %1$s</string>
+    <string name="picked_original">Выбран оригинальный образ: %1$s</string>
+    <string name="status_magisk_missing">Magisk не установлен</string>
+    <string name="status_magisk_no_boot">Magisk %1$s установлен, но magiskboot не найден</string>
+    <string name="status_magisk_ok">Magisk установлен: %1$s</string>
+    <string name="msg_need_magisk">Magisk не установлен (или не найден magiskboot). Сначала нажмите «Скачать и установить Magisk».</string>
+    <string name="uninstall_no_dialog">Системный диалог удаления не найден, открываю настройки приложения.</string>
+    <string name="uninstall_failed">ОШИБКА: не удалось открыть удаление приложения (%1$s).</string>
+    <string name="factory_opening">Открываю инженерное меню (стр. %1$d).</string>
+    <string name="factory_not_found">ОШИБКА: не найдено com.homwee.factory/.FactoryActivity на этом устройстве/прошивке.</string>
+    <string name="factory_denied">ОШИБКА: нет прав на запуск инженерного меню из обычного приложения (%1$s). Используйте adb shell am start ...</string>
+    <string name="dl_searching">%1$s: ищу последний релиз на GitHub...</string>
+    <string name="dl_up_to_date">Magisk %1$s уже установлен, это последняя версия на GitHub (%2$s). Скачивать и устанавливать заново не нужно.</string>
+    <string name="dl_update_available">Установлен Magisk %1$s, на GitHub доступна %2$s.</string>
+    <string name="dl_cached">%1$s: %2$s уже скачан (%3$d байт), скачивать заново не нужно, запускаю установку...</string>
+    <string name="dl_found">%1$s: найден %2$s, скачиваю...</string>
+    <string name="err_save">Не удалось сохранить %1$s</string>
+    <string name="dl_done">%1$s: скачано (%2$d байт), запускаю установку...</string>
+    <string name="progress_install">Жду подтверждения установки в системном диалоге...</string>
+    <string name="err_gh_no_redirect">GitHub: нет перенаправления на последний релиз (HTTP %1$d)</string>
+    <string name="err_gh_no_version">GitHub: не удалось определить версию из %1$s</string>
+    <string name="dl_no_listing">Список файлов релиза не получен (%1$s), использую стандартное имя.</string>
+    <string name="err_dl_http">Скачивание: HTTP %1$d %2$s</string>
+    <string name="err_dl_space">Недостаточно места во внутренней памяти для скачивания (%1$d МБ)</string>
+    <string name="dl_progress">Скачано: %1$d из %2$d МБ (%3$d%%)</string>
+    <string name="progress_downloading">Скачиваю Magisk: %1$d МБ</string>
+    <string name="err_dl_incomplete">Скачано неполностью (%1$d из %2$d байт), попробуйте ещё раз</string>
+    <string name="install_ok">Magisk установлен.</string>
+    <string name="install_failed">Установка не удалась (код %1$d): %2$s</string>
+    <string name="install_started">Установка запущена, подтвердите её в системном диалоге.</string>
+    <string name="install_fallback">PackageInstaller не сработал (%1$s: %2$s), пробую обычный установщик...</string>
+    <string name="install_unavailable">ОШИБКА: установщик APK недоступен (%1$s: %2$s).</string>
+    <string name="err_no_parent">У файла нет родительской папки</string>
+    <string name="err_not_writable">Папка %1$s недоступна для записи (флешка только для чтения?)</string>
+    <string name="err_low_space">На накопителе мало места: нужно около %1$d МБ, свободно %2$d МБ</string>
+    <string name="err_low_internal">Во внутренней памяти мало места для работы: нужно около %1$d МБ</string>
+    <string name="step_copy_input">Копирую входной файл...</string>
+    <string name="info_input_size">Входной файл: %1$d байт</string>
+    <string name="step_find_magiskboot">Ищу magiskboot...</string>
+    <string name="err_no_magiskboot">Не найден magiskboot внутри установленного Magisk. Установите Magisk кнопкой выше.</string>
+    <string name="info_output_size">Готовый образ: %1$d байт (исходный: %2$d байт)</string>
+    <string name="step_saving">Сохраняю результат...</string>
+    <string name="done_saved">Готово: %1$s</string>
+    <string name="err_cmd_failed">Команда %1$s завершилась с кодом %2$d:
+%3$s</string>
+    <string name="stage_unpack">Распаковываю образ</string>
+    <string name="stage_extract_init">Извлекаю init</string>
+    <string name="stage_replace">Ищу и заменяю skip_initramfs</string>
+    <string name="stage_put_back">Возвращаю init в ramdisk</string>
+    <string name="stage_repack">Собираю образ</string>
+    <string name="stage_cleanup">Очищаю временные файлы</string>
+    <string name="err_no_ramdisk">ramdisk.cpio не создан: не удалось распаковать образ</string>
+    <string name="err_not_magisk_image">В /init образа нет строки skip_initramfs: это не образ, пропатченный Magisk (или другая версия Magisk). Файл не изменён и не сохранён.</string>
+    <string name="info_replaced">Заменено вхождений skip_initramfs → skip_initramfz: %1$d</string>
+    <string name="step_copy_original">Копирую оригинальный образ...</string>
+    <string name="info_image_size">Образ: %1$d байт</string>
+    <string name="err_magisk_missing">Magisk не установлен. Установите его кнопкой выше.</string>
+    <string name="step_extract_script">Извлекаю boot_patch.sh из Magisk...</string>
+    <string name="err_asset_missing">assets/%1$s не найден в установленной версии Magisk</string>
+    <string name="step_extract_bins">Извлекаю magisk/magiskinit/magiskboot/init-ld...</string>
+    <string name="err_no_nativedir">nativeLibraryDir Magisk недоступен</string>
+    <string name="err_lib_missing">%1$s не найден в %2$s</string>
+    <string name="step_run_bootpatch">Запускаю boot_patch.sh...</string>
+    <string name="progress_bootpatch">Патчу образ через Magisk (boot_patch.sh), это может занять минуту</string>
+    <string name="err_bootpatch_failed">boot_patch.sh завершился с кодом %1$d</string>
+    <string name="err_no_newboot">new-boot.img не создан, см. вывод boot_patch.sh выше</string>
+    <string name="info_after_bootpatch">После boot_patch.sh: %1$d байт</string>
+    <string name="progress_bootpatch_done">Патч через Magisk завершён</string>
+    <string name="step_apply_fix">Применяю фикс skip_initramfs в magiskinit...</string>
+    <string name="info_final_size">Итоговый образ: %1$d байт (исходный: %2$d байт)</string>
+    <string name="factory_hint_suffix"> Дальше вручную: %1$s</string>
+    <string name="dl_progress_unknown">Скачано: %1$d МБ</string>
+</resources>

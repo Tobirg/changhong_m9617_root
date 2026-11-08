@@ -1,14 +1,12 @@
-# Never commit device firmware dumps, patched images or sensitive backups.
-*.img
-*.IMG
-*.bin
-*.BIN
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+captures/
 *.apk
-*.APK
-*.key
-*.pem
-*.p12
-*.pfx
-*.log
-__pycache__/
-*.pyc
+*.ap_
+*.dex
+.externalNativeBuild/
+.cxx/

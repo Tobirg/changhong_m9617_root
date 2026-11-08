@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Landscape: buttons panel on the left, log on the right. Sized to fit a 1080p TV without scrolling. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        app:cardBackgroundColor="@color/surface"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="0dp">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:clipToPadding="false"
+                android:gravity="center_vertical">
+            <TextView style="@style/SectionLabel" android:text="@string/section_factory" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenFactoryMenu"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/open_factory_menu"
+                    android:textSize="13sp"
+                    android:focusedByDefault="true"
+                    android:textColor="@color/accent"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/accent" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnUartMenu"
+                        style="@style/Widget.MaterialComponents.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="@string/enable_uart"
+                        android:textSize="13sp"
+                        app:cornerRadius="12dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center_horizontal"
+                        android:text="@string/uart_hint"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/surface_alt" />
+
+            <TextView style="@style/SectionLabel" android:text="@string/section_install" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnInstallMagisk"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="2"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/install_magisk"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_primary"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/outline" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/magiskStatus"
+                style="@style/PermissionCaption" />
+
+            <TextView
+                android:id="@+id/captionInstallMagisk"
+                style="@style/PermissionCaption"
+                android:text="@string/permission_required_caption"
+                android:visibility="gone" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/surface_alt" />
+
+            <TextView style="@style/SectionLabel" android:text="@string/section_patch" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:layout_marginBottom="6dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:minLines="2"
+                    android:text="@string/patch_full_title"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:minLines="2"
+                    android:text="@string/patch_manual_title"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFullPatch"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_weight="1"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/full_patch"
+                    android:textSize="13sp"
+                    android:paddingLeft="6dp"
+                    android:paddingRight="6dp"
+                    android:textColor="@color/accent"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/accent" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPickInput"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_weight="1"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/pick_input"
+                    android:textSize="13sp"
+                    android:paddingLeft="6dp"
+                    android:paddingRight="6dp"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/text_primary"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/outline" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/captionFullPatch"
+                style="@style/PermissionCaption"
+                android:text="@string/permission_required_caption"
+                android:visibility="gone" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/surface_alt" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnUninstall"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="2"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/uninstall_app"
+                    android:textSize="13sp"
+                    android:textColor="@color/danger"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
+
+                </LinearLayout>
+        </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/logCard"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="16dp"
+        android:layout_weight="1"
+        app:cardBackgroundColor="@color/surface"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+        <ScrollView
+            android:id="@+id/logScroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:focusable="true"
+            android:descendantFocusability="blocksDescendants"
+            android:padding="14dp">
+
+            <TextView
+                android:id="@+id/log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="false"
+                android:fontFamily="monospace"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:text="" />
+        </ScrollView>
+
+        <LinearLayout
+            android:id="@+id/progressPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="14dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/progressText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:max="100"
+                android:progressTint="@color/accent"
+                android:indeterminateTint="@color/accent" />
+        </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

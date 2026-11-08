@@ -6,4 +6,6 @@
 
 - [Полная инструкция по получению root и откат](docs/guide.md)
 - [Восстановление при ошибках](docs/recovery.md)
-- [Скрипт исправления skip_initramfs](scripts/magisk_skipfix.py)
+- [Заметки по приложению для доработок](docs/app.md)
+- [RootMate.apk](../../releases) — чинит `skip_initramfs` прямо на ТВ, без ПК (собирается автоматически через [GitHub Actions](../../actions))
+- [Скрипт исправления skip_initramfs через adb shell](scripts/skipfix.sh)

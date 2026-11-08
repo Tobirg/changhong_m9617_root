@@ -1,0 +1,118 @@
+<resources>
+    <string name="app_name">RootMate</string>
+
+    <string name="section_factory">Engineering menu</string>
+    <string name="uart_hint">Opens the right page</string>
+    <string name="enable_uart">Enable UART</string>
+
+    <string name="section_install">Setup</string>
+    <string name="install_magisk">Download and install Magisk</string>
+
+    <string name="full_patch">Select\nBOOT_*.IMG</string>
+
+    <string name="section_patch">Choose one method</string>
+    <string name="patch_full_title">Full auto-patch of the original image</string>
+    <string name="patch_manual_title">Only the skip_initramfs fix after Magisk</string>
+    <string name="pick_input">Select\nmagisk_patched-*.img</string>
+
+    <string name="open_factory_menu">Open menu</string>
+
+    <string name="permission_required_caption">Permission required</string>
+
+    <string name="perm_screen_title">Permissions</string>
+    <string name="perm_storage_title">All files access</string>
+    <string name="perm_storage_desc">Needed to pick boot images from the flash drive with the built-in file picker and save the patched result next to the original file.</string>
+    <string name="perm_install_title">Install unknown apps</string>
+    <string name="perm_install_desc">Needed to install Magisk, downloaded directly from GitHub.</string>
+    <string name="perm_status_granted">Granted</string>
+    <string name="perm_status_not_granted">Not granted</string>
+    <string name="perm_grant_button">Grant permission</string>
+    <string name="perm_manage_button">Open settings</string>
+    <string name="perm_done_button">Done</string>
+
+    <string name="uninstall_app">Uninstall RootMate</string>
+    <string name="busy_exit_title">Patching in progress</string>
+    <string name="busy_exit_message">If you leave now, the operation may be interrupted and the file left incomplete. Leave?</string>
+    <string name="busy_exit_stay">Stay</string>
+    <string name="busy_exit_leave">Leave</string>
+
+    <string name="picker_internal">Internal storage</string>
+    <string name="picker_drive">Drive: %1$s</string>
+    <string name="picker_choose_drive">Choose a drive</string>
+    <string name="picker_no_drives">No drives found</string>
+    <string name="picker_up">.. (up)</string>
+    <string name="error_fmt">ERROR: %1$s</string>
+    <string name="progress_preparing">Preparing...</string>
+    <string name="picked_file">Selected file: %1$s</string>
+    <string name="picked_original">Selected original image: %1$s</string>
+    <string name="status_magisk_missing">Magisk is not installed</string>
+    <string name="status_magisk_no_boot">Magisk %1$s is installed, but magiskboot was not found</string>
+    <string name="status_magisk_ok">Magisk installed: %1$s</string>
+    <string name="msg_need_magisk">Magisk is not installed (or magiskboot was not found). First press “Download and install Magisk”.</string>
+    <string name="uninstall_no_dialog">The system uninstall dialog was not found, opening the app settings.</string>
+    <string name="uninstall_failed">ERROR: could not open the app uninstall screen (%1$s).</string>
+    <string name="factory_opening">Opening the engineering menu (page %1$d).</string>
+    <string name="factory_not_found">ERROR: com.homwee.factory/.FactoryActivity was not found on this device/firmware.</string>
+    <string name="factory_denied">ERROR: no permission to start the engineering menu from a regular app (%1$s). Use adb shell am start ...</string>
+    <string name="dl_searching">%1$s: looking for the latest release on GitHub...</string>
+    <string name="dl_up_to_date">Magisk %1$s is already installed and it is the latest version on GitHub (%2$s). There is no need to download or install it again.</string>
+    <string name="dl_update_available">Installed Magisk: %1$s, available on GitHub: %2$s.</string>
+    <string name="dl_cached">%1$s: %2$s is already downloaded (%3$d bytes), no need to download it again, starting the installation...</string>
+    <string name="dl_found">%1$s: found %2$s, downloading...</string>
+    <string name="err_save">Could not save %1$s</string>
+    <string name="dl_done">%1$s: downloaded (%2$d bytes), starting the installation...</string>
+    <string name="progress_install">Waiting for you to confirm the installation in the system dialog...</string>
+    <string name="err_gh_no_redirect">GitHub: no redirect to the latest release (HTTP %1$d)</string>
+    <string name="err_gh_no_version">GitHub: could not determine the version from %1$s</string>
+    <string name="dl_no_listing">Could not get the release file list (%1$s), using the standard name.</string>
+    <string name="err_dl_http">Download: HTTP %1$d %2$s</string>
+    <string name="err_dl_space">Not enough internal storage to download (%1$d MB)</string>
+    <string name="dl_progress">Downloaded: %1$d of %2$d MB (%3$d%%)</string>
+    <string name="progress_downloading">Downloading Magisk: %1$d MB</string>
+    <string name="err_dl_incomplete">Download incomplete (%1$d of %2$d bytes), please try again</string>
+    <string name="install_ok">Magisk installed.</string>
+    <string name="install_failed">Installation failed (code %1$d): %2$s</string>
+    <string name="install_started">Installation started, confirm it in the system dialog.</string>
+    <string name="install_fallback">PackageInstaller failed (%1$s: %2$s), trying the regular installer...</string>
+    <string name="install_unavailable">ERROR: the APK installer is unavailable (%1$s: %2$s).</string>
+    <string name="err_no_parent">The file has no parent folder</string>
+    <string name="err_not_writable">Folder %1$s is not writable (read-only flash drive?)</string>
+    <string name="err_low_space">Not enough space on the drive: about %1$d MB needed, %2$d MB free</string>
+    <string name="err_low_internal">Not enough internal storage to work: about %1$d MB needed</string>
+    <string name="step_copy_input">Copying the input file...</string>
+    <string name="info_input_size">Input file: %1$d bytes</string>
+    <string name="step_find_magiskboot">Looking for magiskboot...</string>
+    <string name="err_no_magiskboot">magiskboot was not found inside the installed Magisk. Install Magisk with the button above.</string>
+    <string name="info_output_size">Output image: %1$d bytes (original: %2$d bytes)</string>
+    <string name="step_saving">Saving the result...</string>
+    <string name="done_saved">Done: %1$s</string>
+    <string name="err_cmd_failed">Command %1$s exited with code %2$d:
+%3$s</string>
+    <string name="stage_unpack">Unpacking the image</string>
+    <string name="stage_extract_init">Extracting init</string>
+    <string name="stage_replace">Finding and replacing skip_initramfs</string>
+    <string name="stage_put_back">Putting init back into the ramdisk</string>
+    <string name="stage_repack">Repacking the image</string>
+    <string name="stage_cleanup">Cleaning up temporary files</string>
+    <string name="err_no_ramdisk">ramdisk.cpio was not created: could not unpack the image</string>
+    <string name="err_not_magisk_image">The image\'s /init has no skip_initramfs string: this is not a Magisk-patched image (or a different Magisk version). The file was not changed or saved.</string>
+    <string name="info_replaced">Replaced occurrences of skip_initramfs → skip_initramfz: %1$d</string>
+    <string name="step_copy_original">Copying the original image...</string>
+    <string name="info_image_size">Image: %1$d bytes</string>
+    <string name="err_magisk_missing">Magisk is not installed. Install it with the button above.</string>
+    <string name="step_extract_script">Extracting boot_patch.sh from Magisk...</string>
+    <string name="err_asset_missing">assets/%1$s was not found in the installed Magisk version</string>
+    <string name="step_extract_bins">Extracting magisk/magiskinit/magiskboot/init-ld...</string>
+    <string name="err_no_nativedir">Magisk nativeLibraryDir is unavailable</string>
+    <string name="err_lib_missing">%1$s was not found in %2$s</string>
+    <string name="step_run_bootpatch">Running boot_patch.sh...</string>
+    <string name="progress_bootpatch">Patching with Magisk (boot_patch.sh), this may take a minute</string>
+    <string name="err_bootpatch_failed">boot_patch.sh exited with code %1$d</string>
+    <string name="err_no_newboot">new-boot.img was not created, see the boot_patch.sh output above</string>
+    <string name="info_after_bootpatch">After boot_patch.sh: %1$d bytes</string>
+    <string name="progress_bootpatch_done">Magisk patching finished</string>
+    <string name="step_apply_fix">Applying the skip_initramfs fix in magiskinit...</string>
+    <string name="info_final_size">Final image: %1$d bytes (original: %2$d bytes)</string>
+    <string name="factory_hint_suffix"> Then do it manually: %1$s</string>
+    <string name="dl_progress_unknown">Downloaded: %1$d MB</string>
+</resources>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Forced true-black Material theme, independent of system light/dark - this is for an OLED TV. -->
+    <style name="Theme.RootMate" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorPrimaryDark">@color/black</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:colorBackground">@color/black</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Small muted label above a group of buttons. -->
+    <style name="SectionLabel">
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
+
+    <!-- Shown under a gated button group when its permission is missing. -->
+    <style name="PermissionCaption">
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:textColor">@color/warning</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+</resources>
