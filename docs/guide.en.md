@@ -83,7 +83,7 @@ On many firmwares UART is off in the TV: the terminal stays silent and you canno
 
 <img src="img/10-uart.png" width="720" alt="Engineering menu, Design Mode, Uart On">
 
-The setting survives reboots. Check: open the terminal (115200, 8N1) and reboot the TV (in RootMate or by unplugging it); the boot log must scroll in the terminal. If it stays empty, check that TX and RX are not swapped and that the adapter is in HDMI port 3.
+The setting survives reboots. Check: open the terminal (115200, 8N1) and reboot the TV (with the button in RootMate, via **Settings → System → Restart**, or by unplugging it); the boot log must scroll in the terminal. If it stays empty, check that TX and RX are not swapped and that the adapter is in HDMI port 3.
 
 
 ## 7. Semi-auto: four steps
@@ -96,41 +96,49 @@ The drive for the steps is chosen once. With several drives plugged in, the app 
 
 <img src="img/09-wizard-drive.png" width="720" alt="Choosing the drive for the steps">
 
-### Running a script in MBOOT
-
-After every script it creates, the app shows a hint with the commands:
-
-<img src="img/08-wizard-mboot.png" width="720" alt="How to run a script in MBOOT">
-
-1. Open the UART terminal on the PC, make its window active and **hold Enter**.
-2. In the app press **Reboot the TV** (Перезагрузить ТВ). The first time the TV asks "Allow USB debugging?": choose **Always allow**. Without adb, simply unplug the TV and plug it in again.
-3. **Keep holding Enter** until the terminal shows the prompt:
-   ~~~text
-   << MT5889 >>#
-   ~~~
-4. Type the commands from the hint, for example:
-   ~~~text
-   usb start 1
-   udstar probe.txt
-   ~~~
-
-`usb start 1` must find the drive:
-~~~text
-1 USB Device(s) found
-       scanning bus for storage devices... max lun:0
-1 Storage Device(s) found
-~~~
-If it answers `Error, couldn't init Lowlevel part`, repeat `usb stop` and `usb start 1`. With 0 devices the drive is in the wrong USB port.
-
-At the start `udstar` prints `Saving Environment to MMC`: that is MBOOT saving its own variables, partitions are not touched. Every script prints its steps and a success marker at the end. Probe, backup and flash reboot the TV into Android by themselves.
+Steps 1, 2 and 4 end with running a script in the MBOOT console. Step 1 describes how in detail; later steps do the same, only the script name changes.
 
 ### Step 1. Probe
 
-Main button **Create the probe script** (Создать скрипт разведки): the app writes `probe.txt` to the drive. Run it in MBOOT (`usb start 1`, `udstar probe.txt`). The script writes nothing to the eMMC: it saves the partition table `PTABLE.BIN` and the bootloader environment `ENV.TXT` (it contains the TV's serial number, do not publish it), prints `PROBE_OK` and reboots the TV.
+1. In RootMate press **Create the probe script** (Создать скрипт разведки). The app writes `probe.txt` to the drive and shows a hint with the commands.
+2. **Get into the MBOOT console.** Open the UART terminal on the PC, make its window active and **hold Enter**. Keep holding it and reboot the TV in any way:
+   - the **Reboot the TV** button (Перезагрузить ТВ) in RootMate's hint (through adb; the first time the TV asks "Allow USB debugging?": choose **Always allow**);
+   - **Settings → System → Restart** (at the bottom of the list) → confirm;
+   - unplug the TV and plug it in again.
+
+   **Keep holding Enter** until the terminal shows the prompt:
+   ~~~text
+   << MT5889 >>#
+   ~~~
+3. Attach the drive in MBOOT:
+   ~~~text
+   usb start 1
+   ~~~
+   The answer must end like this:
+   ~~~text
+   1 USB Device(s) found
+          scanning bus for storage devices... max lun:0
+   1 Storage Device(s) found
+   ~~~
+   If it answers `Error, couldn't init Lowlevel part`, repeat `usb stop` and `usb start 1`. With 0 devices the drive is in the wrong USB port.
+4. Run the script:
+   ~~~text
+   udstar probe.txt
+   ~~~
+   At the start `udstar` prints `Saving Environment to MMC`: that is MBOOT saving its own variables, partitions are not touched. Then the script prints its commands and `PROBE_OK` at the end, and reboots the TV into Android by itself. You no longer need to hold Enter.
+
+The probe writes nothing to the eMMC: it saves the partition table `PTABLE.BIN` and the bootloader environment `ENV.TXT` to the drive (it contains the TV's serial number, do not publish it).
 
 ### Step 2. Backup
 
-After the boot open RootMate: it sees the probe result and offers to continue. Button **Create the backup script** (Создать скрипт бэкапа): the app writes `backup.txt` with the names, sizes and RAM addresses of your very TV. Run it in MBOOT (`udstar backup.txt`).
+1. After the boot open RootMate: it sees the probe result and offers to continue. Button **Create the backup script** (Создать скрипт бэкапа): the app writes `backup.txt` with the names, sizes and RAM addresses of your very TV.
+2. Get into the MBOOT console as in step 1: hold Enter in the terminal and reboot the TV, keep holding Enter until `<< MT5889 >>#`.
+3. Type:
+   ~~~text
+   usb start 1
+   udstar backup.txt
+   ~~~
+   It ends with `BACKUP_OK`, and the TV reboots into Android by itself.
 
 The script saves `boot_a`, `boot_b` and `misc` to `BOOT_A.IMG`, `BOOT_B.IMG`, `MISC.IMG` (if such files exist, it takes `_2`, `_3`…), reads every file back and compares it with the eMMC, and writes `*.CRC` next to them. It writes nothing to the eMMC. The app then recomputes CRC32 and sizes itself and only after that counts the backup as done.
 
@@ -140,37 +148,35 @@ The script saves `boot_a`, `boot_b` and `misc` to `BOOT_A.IMG`, `BOOT_B.IMG`, `M
 
 ### Step 3. Patch
 
-Button **Patch the active slot image and create the flash scripts** (Пропатчить образ активного слота и создать скрипты прошивки; needs Magisk). The app by itself:
+This step happens in Android only, no MBOOT. Open RootMate after the boot and press **Patch the active slot image and create the flash scripts** (Пропатчить образ активного слота и создать скрипты прошивки; needs Magisk). The app by itself:
 
 - takes the image of the **active slot** from the backup (the one the TV boots from now; flashing the other slot is useless);
 - runs `boot_patch.sh` from the installed Magisk and applies the `skip_initramfs` fix (below);
 - saves `BOOT_X_magisk_patched.img` next to the backup (the same size as the original, 32505856 bytes);
 - writes `check.txt`, `flash.txt` and `rollback.txt` with your slot, file names and CRC32 checksums.
 
-It takes about a minute, the buttons are locked meanwhile. Do not leave the app.
+It takes about a minute, the buttons are locked meanwhile. Do not leave the app. At the end the app shows the hint for step 4:
+
+<img src="img/08-wizard-mboot.png" width="720" alt="Hint: how to run the scripts in MBOOT">
 
 > **What the skip_initramfs fix is.** This MBOOT version puts `skip_initramfs` on the kernel command line, which makes Magisk wrongly choose Legacy SAR instead of First Stage Init. Replacing one character in **magiskinit** (the `init` file in the ramdisk) helps: `skip_initramfs` → `skip_initramfz`. RootMate does it with `magiskboot` from Magisk itself.
 
 ### Step 4. Check and flash
 
-Back in MBOOT, as the app's hint says:
+1. Get into the MBOOT console as in step 1: hold Enter in the terminal and reboot the TV (the **Reboot the TV** button in the hint, the settings, or the plug), keep holding Enter until `<< MT5889 >>#`. The hint can be opened again with **Show the MBOOT command** (Показать команду для MBOOT).
+2. Run the check:
+   ~~~text
+   usb start 1
+   udstar check.txt
+   ~~~
+   `check.txt` runs all the checks of the flash without writing anything: the active slot in `misc`, CRC32 of the backup and of the patched image. It must end with `CHECK_OK_slot_a_nothing_written` (or `_b`). The TV stays in MBOOT, you do not need to leave the console.
+3. **Only after `CHECK_OK`** run the flash:
+   ~~~text
+   udstar flash.txt
+   ~~~
+   `flash.txt` repeats the checks, unlocks the bootloader (`devicestate unlock`), writes the image to the boot partition of the active slot, reads it back and compares, prints `FLASH_OK_slot_…` and reboots the TV. Any failed check stops the script before the write.
 
-~~~text
-usb start 1
-udstar check.txt
-~~~
-
-`check.txt` runs all the checks of the flash without writing anything: the active slot in `misc`, CRC32 of the backup and of the patched image. It must end with `CHECK_OK_slot_a_nothing_written` (or `_b`). You do not need to leave the console.
-
-**Only after `CHECK_OK`**:
-
-~~~text
-udstar flash.txt
-~~~
-
-`flash.txt` repeats the checks, unlocks the bootloader (`devicestate unlock`), writes the image to the boot partition of the active slot, reads it back and compares, then reboots the TV. Any failed check stops the script before the write.
-
-**If the TV is not unlocked yet** (the boot state is not `orange`), `flash.txt` ends with **a wipe of user data**: without it the TV does not boot because of the encryption keys. After the wipe set the TV up again, developer options and debugging included; RootMate and Magisk are gone with the data. Install Magisk again: the APK from the drive, or **RootMate-1.0.apk** → **Download and install Magisk**. **Right after installing press "Open"**: there is no icon in the stock launcher (later it can be opened from Android settings). Agree to the additional setup when asked.
+**If the TV is not unlocked yet** (the boot state is not `orange`), `flash.txt` **wipes user data** before the reboot: without it the TV does not boot because of the encryption keys. After the wipe set the TV up again, developer options and debugging included; RootMate and Magisk are gone with the data. Install Magisk again: the APK from the drive, or **RootMate-1.0.apk** → **Download and install Magisk**. **Right after installing press "Open"**: there is no icon in the stock launcher (later it can be opened from Android settings). Agree to the additional setup when asked.
 
 If the TV was already unlocked, there is no wipe, and the app shows "Flashing finished (FLASH.OK)".
 
@@ -193,14 +199,14 @@ The slot matches the one you flashed, `verifiedbootstate` is `orange`, `su` retu
 | A script stopped at `cmp` | A check failed, nothing after it ran. The last `STEP…`/`BACKUP_…` line shows which one. Create the script again in the app. |
 | The terminal stays silent while the TV boots | UART is off in the TV (step 6), TX/RX are swapped, or the adapter is not in HDMI port 3. |
 | `usb start 1` finds 0 devices | The drive is in the wrong USB port or is not FAT32. |
-| "Reboot the TV" does not work | Developer options and USB debugging are off (the Permissions screen) or debugging was not allowed. You can unplug the TV instead. |
+| "Reboot the TV" does not work | Developer options and USB debugging are off (the Permissions screen) or debugging was not allowed. Reboot the TV via **Settings → System → Restart** or by unplugging it. |
 | The app reports an incompatible file system or partition | Format the whole drive as FAT32, a single partition. |
 | The TV does not boot after flashing | [recovery.en.md](recovery.en.md); rollback below. |
 
 
 ## 9. Rollback
 
-In MBOOT:
+Get into the MBOOT console as in step 1 of section 7 (Enter in the terminal and a reboot of the TV) and type:
 ~~~text
 usb start 1
 udstar rollback.txt
