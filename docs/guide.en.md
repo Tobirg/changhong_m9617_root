@@ -37,7 +37,7 @@ Do not connect the adapter's VCC.
 
 On a PC, format the drive as **FAT32**, a single partition. Download and copy to it:
 
-- **RootMate-1.0.apk**: [latest release](https://github.com/Tobirg/changhong_m9617_root/releases/latest).
+- **RootMate** (the `RootMate-*.apk` file): [latest release](https://github.com/Tobirg/changhong_m9617_root/releases/latest).
 - Optionally the [Magisk APK](https://github.com/topjohnwu/Magisk/releases/latest): needed if the TV has no internet.
 
 > **Do not delete files MBOOT wrote to the drive** (`PTABLE.BIN`, `ENV.TXT`, `*.IMG`, `*.CRC`, `*.OK`), even when you no longer need them. MBOOT marks the end of a file in the FAT with `0xFFFFFFFF`; if such a file is deleted and Android reuses its space, MBOOT cannot read new files (`Invalid FAT entry`). To start over, copy what you need to a PC and format the whole drive. Files the app wrote (`*.txt`, `*_magisk_patched*.img`) may be deleted.
@@ -55,7 +55,7 @@ On the PC open a terminal on the adapter's COM port with **115200, 8N1, no flow 
 
 ## 5. Install RootMate and prepare the TV
 
-Open the stock file manager on the TV and install **RootMate-1.0.apk** from the drive (allow installs from unknown sources). If the file manager cannot open APKs, use `adb install`.
+Open the stock file manager on the TV and install **RootMate** (`RootMate-*.apk`) from the drive (allow installs from unknown sources). If the file manager cannot open APKs, use `adb install`.
 <img width="332" height="276" alt="image" src="https://github.com/user-attachments/assets/6d52afa9-80ed-493b-a0e8-b74b397f525e" />
 
 Open RootMate. On the first start it shows the **Permissions** screen; grant all three:
@@ -184,7 +184,7 @@ It takes about a minute, the buttons are locked meanwhile. Do not leave the app.
    ~~~
    `flash.txt` repeats the checks, unlocks the bootloader (`devicestate unlock`), writes the image to the boot partition of the active slot, reads it back and compares, prints `FLASH_OK_slot_…` and reboots the TV. Any failed check stops the script before the write.
 
-**If the TV is not unlocked yet** (the boot state is not `orange`), `flash.txt` **wipes user data** before the reboot: without it the TV does not boot because of the encryption keys. After the wipe set the TV up again, developer options and debugging included; RootMate and Magisk are gone with the data. Install Magisk again: the APK from the drive, or **RootMate-1.0.apk** → **Download and install Magisk**. **Right after installing press "Open"**: there is no icon in the stock launcher (later it can be opened from Android settings). Agree to the additional setup when asked.
+**If the TV is not unlocked yet** (the boot state is not `orange`), `flash.txt` **wipes user data** before the reboot: without it the TV does not boot because of the encryption keys. After the wipe set the TV up again, developer options and debugging included; RootMate and Magisk are gone with the data. Install Magisk again: the APK from the drive, or RootMate (install it again from the drive) → **Download and install Magisk**. **Right after installing press "Open"**: there is no icon in the stock launcher (later it can be opened from Android settings). Agree to the additional setup when asked.
 
 If the TV was already unlocked, there is no wipe, and the app shows "Flashing finished (FLASH.OK)".
 
