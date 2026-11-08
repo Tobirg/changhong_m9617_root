@@ -43,6 +43,20 @@ If the drive was used before, delete old `*_magisk_patched*.img` files so you do
 
 ## 4. Dump the original boot images from eMMC to USB
 
+> **Quick way (the wizard in RootMate).** Install RootMate (step 5, Magisk is not needed for this) and put a FAT32 drive into the TV. Everything the app and the scripts make lives in the drive root; the top of the app shows "Stage: ..." recognised from the files and offers the next step. Every MBOOT script ends with a marker (`PROBE.OK`, `BACKUP.OK`, `FLASH.OK`), so an unfinished run is told apart from a finished one.
+>
+> 1. **Probe.** Press "Create the probe script": the app writes `probe.txt` and shows how to get into the MBOOT console. Hold Enter in the UART terminal, press "Reboot the TV" (the app reboots the TV without root through its own adb; the first time the TV asks "USB debugging": "Always allow") and type `usb start 1`, `udstar probe.txt`. The script saves the partition table `PTABLE.BIN` and the environment `ENV.TXT` (it contains the serial number, do not publish it) and reboots the TV by itself.
+> 2. **Backup.** At the next start the app sees the result and offers to create `backup.txt` with the names, sizes and memory addresses of your very TV (nothing about the TV is built into the app). The same actions: `usb start 1`, `udstar backup.txt`. The script saves `boot_a`, `boot_b`, `misc` as `BOOT_A.IMG`, `BOOT_B.IMG`, `MISC.IMG` (taking `_2`, `_3`... if such files exist), checks the header, reads every file back and compares it with the eMMC, and writes a `*.CRC` next to each. The app recomputes the CRC32 and the sizes of the saved files and only then calls the stage done. Copy `BOOT_*.IMG` to a PC right away.
+> 3. **Patch.** The app offers to patch the active slot image from the backup (Magisk is needed) and creates `check.txt`, `flash.txt`, `rollback.txt`.
+> 4. **Flash.** In the MBOOT console: `usb start 1`, `udstar check.txt` (checks only, ends with `CHECK_OK_...`, you stay in the console), then `udstar flash.txt`: it verifies the slot, the original and the patched image by CRC32, unlocks, writes, reads back and compares, wipes data (if the boot state changes) and reboots. If something goes wrong: `udstar rollback.txt`.
+>
+> If `usb start 1` answers `Error, couldn't init Lowlevel part`, repeat `usb stop` and `usb start 1`.
+>
+> **Important about the drive.** Do not delete files from it that MBOOT wrote (the app only renames them). MBOOT marks the end of a file in the FAT with `0xFFFFFFFF`; if such a file is deleted and Android takes its clusters it keeps the top 4 bits, and MBOOT can no longer read the new file (`Invalid FAT entry`, `check.txt` stops at step 3 before writing anything). Then copy the files to a PC, format the drive (FAT32) and go through the stages again.
+>
+> The manual commands below stay as a fallback.
+
+
 Unplug the TV from the mains.  
 Connect the adapter to **HDMI port 3** (counting from the bottom) and to the PC.  
 Insert the drive **into the USB port closest to the panel**.  
@@ -242,6 +256,9 @@ On this MBOOT the real kernel command line contains **skip_initramfs**. Because 
 
 ## 8. Unlock the bootloader, flash and wipe data
 
+> **Quick way (scripts from RootMate).** After patching (step 7) RootMate writes `check.txt`, `flash.txt` and `rollback.txt` to the drive root with your slot, file names and checksums filled in. The original `BOOT_*.IMG` must be on the same drive. In the MBOOT console run `usb start 1`, then `udstar check.txt` (checks only, ends with `CHECK_OK_...`), then `udstar flash.txt`. The script verifies the slot, the original and the patched image (CRC32), unlocks the bootloader, writes the image, reads it back and compares, wipes data (if the boot state changes) and resets the TV. Any error stops the script before anything is written. An `Unknown command` line may appear at the very end because of garbage after the end of the file: it is harmless. The manual commands below stay as a fallback.
+
+
 **Get the console again as in step 4.**
 ~~~text
 << MT5889 >>#
@@ -306,6 +323,9 @@ adb shell "su -c id"
 The slot must match the one you flashed, `verifiedbootstate` will be `orange`, `su` returns `uid=0`.
 
 ## ROLLBACK
+
+> **Quick way.** `udstar rollback.txt` (created by RootMate together with `flash.txt`): verifies the slot and the original image, sets `devicestate lock`, writes the original, verifies the write, wipes data and resets the TV.
+
 
 Go back to MBOOT and enter. The rollback writes the **original image of the active slot** (`X`, step 6):
 ~~~text

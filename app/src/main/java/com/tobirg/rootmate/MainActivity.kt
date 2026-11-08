@@ -46,6 +46,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var progressText: TextView
     private lateinit var progressBar: android.widget.ProgressBar
     private lateinit var defaultFocusView: View
+    private lateinit var stageStatus: TextView
+    private lateinit var btnNextStep: Button
+    private var stageInfo: Wizard.Info? = null
+    private var lastOffered: Wizard.Stage? = null
     private var pendingPickTarget: String = ""
 
     /** True while a long operation (patching, Magisk download) runs: all buttons are locked. */
@@ -55,7 +59,7 @@ class MainActivity : AppCompatActivity() {
 
     private val allButtonIds = listOf(
         R.id.btnUartMenu, R.id.btnInstallMagisk, R.id.btnFullPatch, R.id.btnPickInput,
-        R.id.btnOpenFactoryMenu, R.id.btnUninstall
+        R.id.btnOpenFactoryMenu, R.id.btnUninstall, R.id.btnBackupScript, R.id.btnProbeScript, R.id.btnNextStep
     )
 
     /** Must be called on the UI thread. Locks the UI and runs [block] on a worker thread. */
@@ -133,6 +137,9 @@ class MainActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
 
         defaultFocusView = findViewById(R.id.btnOpenFactoryMenu)
+        stageStatus = findViewById(R.id.stageStatus)
+        btnNextStep = findViewById(R.id.btnNextStep)
+        btnNextStep.setOnClickListener { onNextStep() }
         logCard.strokeColor = android.graphics.Color.WHITE
         logScroll.setOnFocusChangeListener { _, focused ->
             logCard.strokeWidth = if (focused) (3 * resources.displayMetrics.density).toInt() else 0
@@ -156,6 +163,12 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnInstallMagisk).setOnClickListener {
             withInstallPermission { downloadAndInstall("topjohnwu/Magisk", "Magisk") }
         }
+        findViewById<Button>(R.id.btnProbeScript).setOnClickListener {
+            withStoragePermission { runBusy { createProbeScript() } }
+        }
+        findViewById<Button>(R.id.btnBackupScript).setOnClickListener {
+            withStoragePermission { runBusy { createBackupScript() } }
+        }
         findViewById<Button>(R.id.btnFullPatch).setOnClickListener {
             withMagisk { withStoragePermission { launchPicker("full") } }
         }
@@ -165,10 +178,12 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnUninstall).setOnClickListener { uninstallSelf() }
 
         val gatedByStorage = listOf(R.id.btnFullPatch, R.id.btnPickInput)
+        val storageOnly = listOf(R.id.btnBackupScript, R.id.btnProbeScript)
         allButtonIds.forEach { id ->
             val gated = when (id) {
                 R.id.btnInstallMagisk -> { { !hasInstallPermission() } }
                 in gatedByStorage -> { { !hasStoragePermission() || !isMagiskInstalled() } }
+                in storageOnly -> { { !hasStoragePermission() } }
                 else -> { { false } }
             }
             TvFocus.apply(findViewById(id), dimmed = gated)
@@ -197,6 +212,7 @@ class MainActivity : AppCompatActivity() {
         defaultFocusView.post { defaultFocusView.requestFocus() }
         updateGatedButtons()
         updateSlotStatus()
+        refreshStage(true)
         if (!permissionsIntroShown && (!hasStoragePermission() || !hasInstallPermission())) {
             permissionsIntroShown = true
             openPermissionsScreen()
@@ -296,6 +312,7 @@ class MainActivity : AppCompatActivity() {
         val hasMagisk = isMagiskInstalled()
         setGated(listOf(R.id.btnFullPatch), R.id.captionFullPatch, hasStorage, hasMagisk)
         setGated(listOf(R.id.btnPickInput), R.id.captionFullPatch, hasStorage, hasMagisk)
+        setGated(listOf(R.id.btnProbeScript, R.id.btnBackupScript), R.id.captionBackupScript, hasStorage)
         updateMagiskStatus()
 
         val hasInstall = hasInstallPermission()
@@ -398,6 +415,216 @@ class MainActivity : AppCompatActivity() {
         logBuf.append("\n\n")
         log.text = logBuf
         scrollLogToEnd()
+    }
+
+    // ---------------------------------------------------------------------
+    // The step-by-step flow (see Wizard): recognise the stage, offer the next action
+    // ---------------------------------------------------------------------
+
+    /** Looks at the drive (off the UI thread) and shows the stage it recognised; [offer] may pop up the "continue?" question. */
+    private fun refreshStage(offer: Boolean) {
+        if (busy) return
+        Thread {
+            val info = try {
+                Wizard.detect(this, activeSlotSuffix()?.substring(1))
+            } catch (e: Exception) {
+                Wizard.Info(Wizard.Stage.NO_DRIVE, null, null, detail = e.message ?: "")
+            }
+            runOnUiThread { applyStage(info, offer) }
+        }.start()
+    }
+
+    private fun stageText(info: Wizard.Info): String = when (info.stage) {
+        Wizard.Stage.NO_DRIVE -> getString(R.string.stage_no_drive)
+        Wizard.Stage.FRESH -> getString(R.string.stage_fresh)
+        Wizard.Stage.PROBE_READY -> getString(R.string.stage_probe_ready)
+        Wizard.Stage.PROBE_DONE -> getString(R.string.stage_probe_done)
+        Wizard.Stage.BACKUP_READY -> getString(R.string.stage_backup_ready)
+        Wizard.Stage.BACKUP_BAD -> getString(R.string.stage_backup_bad, info.detail)
+        Wizard.Stage.BACKUP_DONE -> getString(
+            R.string.stage_backup_done,
+            activeSlotSuffix()?.substring(1)?.uppercase() ?: "?"
+        )
+        Wizard.Stage.PATCHED -> getString(R.string.stage_patched)
+        Wizard.Stage.FLASH_DONE -> getString(R.string.stage_flash_done)
+    }
+
+    /** Label of the main button for the stage; null hides it. */
+    private fun nextLabel(info: Wizard.Info): String? = when (info.stage) {
+        Wizard.Stage.NO_DRIVE -> getString(R.string.next_check_drive)
+        Wizard.Stage.FRESH -> getString(R.string.next_make_probe)
+        Wizard.Stage.PROBE_READY, Wizard.Stage.BACKUP_READY, Wizard.Stage.PATCHED -> getString(R.string.next_show_command)
+        Wizard.Stage.PROBE_DONE -> getString(R.string.next_make_backup)
+        Wizard.Stage.BACKUP_BAD -> getString(R.string.next_make_backup_again)
+        Wizard.Stage.BACKUP_DONE -> getString(R.string.next_patch)
+        Wizard.Stage.FLASH_DONE -> null
+    }
+
+    private fun applyStage(info: Wizard.Info, offer: Boolean) {
+        stageInfo = info
+        stageStatus.text = getString(R.string.stage_prefix, stageText(info))
+        val label = nextLabel(info)
+        btnNextStep.visibility = if (label == null) View.GONE else View.VISIBLE
+        if (label != null) btnNextStep.text = label
+        val offerable = info.stage == Wizard.Stage.PROBE_DONE ||
+            (info.stage == Wizard.Stage.BACKUP_DONE && info.backupImage != null && isMagiskInstalled())
+        if (offer && !busy && offerable && info.stage != lastOffered) {
+            lastOffered = info.stage
+            AlertDialog.Builder(this)
+                .setTitle(R.string.dlg_continue_title)
+                .setMessage(stageText(info) + "\n\n" + label)
+                .setPositiveButton(R.string.dlg_continue_yes) { _, _ -> onNextStep() }
+                .setNegativeButton(R.string.dlg_close, null)
+                .show()
+        }
+    }
+
+    /** What the main button does for the stage that was recognised. */
+    private fun onNextStep() {
+        val info = stageInfo ?: return
+        when (info.stage) {
+            Wizard.Stage.NO_DRIVE -> {
+                appendWarning(getString(R.string.err_no_usb))
+                refreshStage(false)
+            }
+            Wizard.Stage.FRESH -> withStoragePermission { runBusy { createProbeScript() } }
+            Wizard.Stage.PROBE_READY -> showMbootDialog(listOf("probe.txt"))
+            Wizard.Stage.PROBE_DONE, Wizard.Stage.BACKUP_BAD -> withStoragePermission { runBusy { createBackupScript() } }
+            Wizard.Stage.BACKUP_READY -> showMbootDialog(listOf("backup.txt"))
+            Wizard.Stage.BACKUP_DONE -> {
+                val img = info.backupImage
+                if (img == null) {
+                    appendWarning(getString(R.string.warn_stage_no_slot_image))
+                } else {
+                    withMagisk {
+                        withStoragePermission {
+                            appendLog(getString(R.string.picked_original, img.absolutePath))
+                            runBusy { fullPatch(img.absolutePath) }
+                        }
+                    }
+                }
+            }
+            Wizard.Stage.PATCHED -> showMbootDialog(listOf("check.txt", "flash.txt"))
+            Wizard.Stage.FLASH_DONE -> {}
+        }
+    }
+
+    /**
+     * The question that follows every script: how to get into the MBOOT console and the exact commands, with a
+     * button that reboots the TV through its own adb (see AdbLocal) and one that copies the commands.
+     */
+    private fun showMbootDialog(scripts: List<String>) {
+        val cmds = "usb start 1\n" + scripts.joinToString("\n") { "udstar $it" }
+        var msg = getString(R.string.dlg_mboot_message, scripts.first()) + "\n\n" + cmds
+        if (scripts.size > 1) msg += "\n\n" + getString(R.string.dlg_mboot_order)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.dlg_mboot_title)
+            .setMessage(msg)
+            .setPositiveButton(R.string.dlg_reboot) { _, _ -> rebootViaAdb() }
+            .setNeutralButton(R.string.dlg_copy) { _, _ ->
+                val cm = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cm.setPrimaryClip(android.content.ClipData.newPlainText("mboot", cmds))
+                Toast.makeText(this, R.string.toast_copied, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(R.string.dlg_close, null)
+            .show()
+    }
+
+    /** Reboots the TV without root through its own adbd (loopback); the first time the TV asks to allow debugging. */
+    private fun rebootViaAdb() {
+        runBusy {
+            step(10, getString(R.string.step_adb_reboot))
+            // write everything out to the drive before the reboot, so the FAT on it is complete when MBOOT reads it
+            try { Runtime.getRuntime().exec("sync").waitFor() } catch (e: Exception) { }
+            try {
+                AdbLocal.reboot(this, 120000) { runOnUiThread { appendWarning(getString(R.string.warn_adb_ask)) } }
+                log(getString(R.string.info_adb_rebooting))
+            } catch (e: AdbLocal.AdbException) {
+                runOnUiThread { appendWarning(e.message ?: "adb") }
+            }
+        }
+    }
+
+    /**
+     * Writes probe.txt into the work folder: the first of the MBOOT scripts that need no knowledge about the TV.
+     * It saves the partition table (PTABLE.BIN) and the MBOOT environment (ENV.TXT); everything else is built from those.
+     */
+    private fun createProbeScript() {
+        val root = Wizard.pickRoot(this)
+        if (root == null) {
+            runOnUiThread { appendWarning(getString(R.string.err_no_usb)) }
+            return
+        }
+        step(30, getString(R.string.step_probe_script))
+        try {
+            val f = MbootScripts.writeProbe(this, root)
+            log(getString(R.string.done_probe_script, f.absolutePath))
+            runOnUiThread { showMbootDialog(listOf("probe.txt")); refreshStage(false) }
+        } catch (e: Exception) {
+            runOnUiThread { appendWarning(getString(R.string.warn_backup_failed, e.message ?: e.javaClass.simpleName)) }
+        }
+    }
+
+    /**
+     * Writes backup.txt from the probe files: every boot partition and misc, with the sizes of the partition table
+     * and RAM buffers from the environment of this very TV. Needs neither Magisk nor root.
+     */
+    private fun createBackupScript() {
+        val root = Wizard.pickRoot(this)
+        if (root == null) {
+            runOnUiThread { appendWarning(getString(R.string.err_no_usb)) }
+            return
+        }
+        step(30, getString(R.string.step_backup_script))
+        try {
+            val r = MbootScripts.writeBackup(this, root)
+            log(getString(R.string.done_backup_script, r.file.absolutePath, r.names.joinToString(" ")))
+            runOnUiThread { showMbootDialog(listOf("backup.txt")); refreshStage(false) }
+        } catch (e: Exception) {
+            runOnUiThread { appendWarning(getString(R.string.warn_backup_failed, e.message ?: e.javaClass.simpleName)) }
+        }
+    }
+
+    private fun systemProperty(name: String): String? = try {
+        Class.forName("android.os.SystemProperties")
+            .getMethod("get", String::class.java, String::class.java)
+            .invoke(null, name, "") as? String
+    } catch (e: Exception) {
+        null
+    } ?: try {
+        ProcessBuilder("/system/bin/getprop", name).redirectErrorStream(true).start()
+            .inputStream.bufferedReader().readText()
+    } catch (e: Exception) {
+        null
+    }
+
+    /**
+     * After a successful patch: writes flash.txt / check.txt / rollback.txt for MBOOT's udstar to the
+     * root of the USB drive (see MbootScripts). A failure here never fails the patch itself, it only
+     * means the operator has to type the MBOOT commands by hand as in the guide.
+     */
+    private fun generateMbootScripts(original: File, patched: File) {
+        val slot = activeSlotSuffix()?.substring(1)
+        if (slot == null) {
+            runOnUiThread { appendWarning(getString(R.string.warn_scripts_no_slot)) }
+            return
+        }
+        val picked = Regex("BOOT_([AB])", RegexOption.IGNORE_CASE).find(original.name)?.groupValues?.get(1)?.lowercase()
+        if (picked != null && picked != slot) {
+            log(getString(R.string.info_scripts_skipped_slot))
+            return
+        }
+        step(97, getString(R.string.step_scripts))
+        val orange = systemProperty("ro.boot.verifiedbootstate")?.trim()?.lowercase() == "orange"
+        try {
+            val r = MbootScripts.generate(this, original, patched, slot, wipe = !orange)
+            log(getString(R.string.done_scripts, r.files.joinToString { it.name }, r.dir.absolutePath))
+            log(getString(if (r.wipe) R.string.info_scripts_wipe else R.string.info_scripts_nowipe))
+            log(getString(R.string.info_scripts_howto))
+            runOnUiThread { showMbootDialog(listOf("check.txt", "flash.txt")); refreshStage(false) }
+        } catch (e: Exception) {
+            log(getString(R.string.warn_scripts_failed, e.message ?: e.javaClass.simpleName))
+        }
     }
 
     /** After a patch: warns (last in the log) if the image is named for the other slot than the active one. */
@@ -629,6 +856,7 @@ class MainActivity : AppCompatActivity() {
     private fun saveAtomically(src: File, dest: File) {
         val part = File(dest.parentFile, dest.name + ".part")
         src.copyTo(part, overwrite = true)
+        java.io.FileOutputStream(part, true).use { it.fd.sync() }
         dest.delete()
         if (!part.renameTo(dest)) throw IllegalStateException(getString(R.string.err_save, dest.absolutePath))
     }
@@ -867,6 +1095,7 @@ class MainActivity : AppCompatActivity() {
         step(95, getString(R.string.step_saving))
         saveAtomically(finalOutput, dest)
         log(getString(R.string.done_saved, dest.absolutePath))
+        generateMbootScripts(inputFile, dest)
         logSlotMismatch(inputFile)
     }
 }
