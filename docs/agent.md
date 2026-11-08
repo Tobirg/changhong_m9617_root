@@ -6,15 +6,17 @@ the "Semi-auto" mode of the app ([guide.en.md](guide.en.md), section 7): only wh
 
 Русская версия инструкции для людей: [guide.md](guide.md). Этот файл для агентов, поэтому на английском.
 
-## What a human has to do (once)
+## What a human has to do
 
-1. Wire the UART adapter (3.3 V TTL, 115200 8N1, no VCC; pins in [recovery.en.md](recovery.en.md)) and tell the agent its port.
-2. Turn UART on once: RootMate → "Open the engineering menu" → Design Mode → Uart → On ([guide.en.md](guide.en.md), section 6).
-3. Put a FAT32 USB drive into the USB port closer to the panel and keep it there: it works reliably in Android, and the scripts use it as `usb start 1`.
-4. Turn on developer options (Settings → System → About → press "Build" 7 times) and "USB debugging" (Settings →
+1. Build the UART adapter and connect it to HDMI port 3 (3.3 V TTL, 115200 8N1, no VCC; [guide.en.md](guide.en.md), sections 2 and 4) and tell the agent its port.
+2. Put a FAT32 USB drive into the USB port closer to the panel and keep it there: it works reliably in Android, and the scripts use it as `usb start 1`.
+3. Turn on developer options (Settings → System → About → press "Build" 7 times) and "USB debugging" (Settings →
    System → Developer options). On this TV that also makes adbd listen on tcp 5555, so `adb connect <tv-ip>:5555` works.
-5. The first `adb connect` shows "Allow USB debugging?" on the TV: "Always allow".
+4. The first `adb connect` shows "Allow USB debugging?" on the TV: "Always allow".
+5. After the agent installed RootMate (Setup): turn UART on once, RootMate → "Open the engineering menu" → Design Mode → Uart → On
+   ([guide.en.md](guide.en.md), section 6).
 6. Approve the steps that write the eMMC (see [Safety](#safety)) when the agent asks.
+7. After a flash that wiped the data: set the TV up again and turn developer options and USB debugging back on (step 3).
 
 Everything else the agent can do itself.
 
@@ -37,7 +39,7 @@ python scripts/agent/rootmate.py open    # RootMate on screen
 ```
 
 RootMate only has to be open (either of its two modes) while the agent works. From the first command on it shows no
-dialogs (the same data is in the JSON answers), keeps the screen on and writes every command into its log, so a
+dialogs (the same data is in the JSON answers), keeps the screen on and writes every command except `status` and `log` into its log, so a
 person watching the TV sees what the agent does. A key press on the remote gives the app back to the person.
 Commands sent while it is closed answer with an error that says how to open it. `open` is safe to repeat.
 `next` and `choose` switch the screen to the "Semi-auto" view; `patch` and `fix` work in either.
@@ -72,6 +74,8 @@ Status fields:
 |---|---|
 | `stage` | `NO_PERMISSION`, `NO_DRIVE`, `DRIVE_MISSING`, `CHOOSE_DRIVE`, `BAD_DRIVE`, `FRESH`, `PROBE_READY`, `PROBE_DONE`, `BACKUP_READY`, `BACKUP_BAD`, `BACKUP_DONE`, `PATCHED`, `FLASH_DONE` |
 | `stage_text` | the same line the app shows (Russian or English by the TV language) |
+| `detail` | extra detail for some stages (the missing drive id, the reason a backup did not verify) |
+| `mode` | the screen the app shows: `auto` (Semi-auto) or `manual` |
 | `mboot` | the MBOOT commands for this stage, e.g. `["usb start 1", "udstar check.txt", "udstar flash.txt"]`; empty when nothing waits for MBOOT |
 | `busy`, `progress` | a background patch runs; its current step |
 | `drive`, `drives`, `chosen_drive` | the drive of the flow (id, path, fs, partition, bytes, fat, first_partition) and every mounted one |
@@ -100,11 +104,15 @@ Loop on `status` and act on `stage`:
 | `PATCHED` | run in MBOOT `check.txt`; only on `CHECK_OK`: ask the human, then run `flash.txt` |
 | `FLASH_DONE` | verify root: `adb shell su -c id` (the first time Magisk asks on the TV screen to allow the shell) |
 
+After a flash with a data wipe (`verified_boot_state` was not `orange`) adb, RootMate and Magisk are gone with the data:
+the human sets the TV up and turns USB debugging on again, then the agent runs Setup again (RootMate, `appops`,
+Magisk); `status` then shows `FLASH_DONE` from the `FLASH.OK` on the drive.
+
 ### Running a script in MBOOT
 
 ```
 python scripts/agent/mboot.py --port COM8 catch --timeout 180 &   # start first: it holds Enter
-adb reboot                                                          # or rootmate's own reboot, or a power cycle
+adb reboot                                                          # or the human: Settings → System → Restart, or a power cycle
 wait for "catch" to exit 0 (the MBOOT prompt "<< MT5889 >>#")
 python scripts/agent/mboot.py --port COM8 udstar probe.txt         # usb start 1 + udstar, checks the marker
 ```
