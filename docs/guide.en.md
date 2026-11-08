@@ -18,7 +18,7 @@ The manual way (your own MBOOT commands, patching a picked file) stays as a fall
 - Internet on the TV (RootMate downloads Magisk by itself) or the Magisk APK on the drive.
 
 
-## 2. The UART adapter via HDMI
+## 2. Build the UART adapter
 
 <img width="1702" height="1702" alt="photo_2026-10-31_20-34-52" src="https://github.com/user-attachments/assets/2ae974fb-9402-445b-80c8-4b52a521ba75" />
 
@@ -28,11 +28,7 @@ The manual way (your own MBOOT commands, patching a picked file) stays as a fall
 | **8** | GND | GND of the adapter |
 | **14** | **RX** of the TV | **TX** of the adapter |
 
-Terminal settings: **115200, 8N1, no flow control**. Do not connect the adapter's VCC.
-
-The adapter goes into **HDMI port 3** (counting from the bottom), the drive into **the USB port closer to the panel**: only that one is seen by `usb start 1` in MBOOT.
-
-<img width="2487" height="2503" alt="20261101_111935" src="https://github.com/user-attachments/assets/e6165c5f-8e2b-491a-bfb3-8803b67d4c2e" />
+Do not connect the adapter's VCC.
 
 
 ## 3. Prepare the USB drive
@@ -45,9 +41,19 @@ On a PC, format the drive as **FAT32**, a single partition. Download and copy to
 > **Do not delete files MBOOT wrote to the drive** (`PTABLE.BIN`, `ENV.TXT`, `*.IMG`, `*.CRC`, `*.OK`), even when you no longer need them. MBOOT marks the end of a file in the FAT with `0xFFFFFFFF`; if such a file is deleted and Android reuses its space, MBOOT cannot read new files (`Invalid FAT entry`). To start over, copy what you need to a PC and format the whole drive. Files the app wrote (`*.txt`, `*_magisk_patched*.img`) may be deleted.
 
 
-## 4. Install RootMate and prepare the TV
+## 4. Connect everything to the TV
 
-Put the drive into the TV, open the stock file manager and install **RootMate-1.0.apk** (allow installs from unknown sources). If the file manager cannot open APKs, use `adb install`.
+<img width="2487" height="2503" alt="20261101_111935" src="https://github.com/user-attachments/assets/e6165c5f-8e2b-491a-bfb3-8803b67d4c2e" />
+
+- The UART adapter: into **HDMI port 3** (counting from the bottom), the other end into a USB port of the PC.
+- The drive: into **the USB port closer to the panel**. Use this port for all the steps: it works reliably in Android, and the MBOOT scripts use it too (`usb start 1`).
+
+On the PC open a terminal on the adapter's COM port with **115200, 8N1, no flow control**.
+
+
+## 5. Install RootMate and prepare the TV
+
+Open the stock file manager on the TV and install **RootMate-1.0.apk** from the drive (allow installs from unknown sources). If the file manager cannot open APKs, use `adb install`.
 <img width="332" height="276" alt="image" src="https://github.com/user-attachments/assets/6d52afa9-80ed-493b-a0e8-b74b397f525e" />
 
 Open RootMate. On the first start it shows the **Permissions** screen; grant all three:
@@ -67,7 +73,7 @@ Press **Download and install Magisk** (Скачать и установить Ma
 <img src="img/03-install-magisk.png" width="720" alt="Magisk install system dialog">
 
 
-## 5. Turn UART on
+## 6. Turn UART on
 
 On many firmwares UART is off in the TV: the terminal stays silent and you cannot get into the MBOOT console. Turn it on before the steps, from Android:
 
@@ -80,7 +86,7 @@ On many firmwares UART is off in the TV: the terminal stays silent and you canno
 The setting survives reboots. Check: open the terminal (115200, 8N1) and reboot the TV (in RootMate or by unplugging it); the boot log must scroll in the terminal. If it stays empty, check that TX and RX are not swapped and that the adapter is in HDMI port 3.
 
 
-## 6. Semi-auto: four steps
+## 7. Semi-auto: four steps
 
 The **Semi-auto** mode is selected at start. Under the mode switch the app shows which step you are on (e.g. "Step 1 of 4, probe: not started yet"), which drive it works with and what to do next (the main button). The step is recognised from the files on the drive, so after every reboot the app continues from the right place and offers the next action.
 
@@ -179,20 +185,20 @@ adb shell "su -c id"
 The slot matches the one you flashed, `verifiedbootstate` is `orange`, `su` returns `uid=0` (the first time Magisk asks on the TV screen whether to allow root for the shell).
 
 
-## 7. If something goes wrong
+## 8. If something goes wrong
 
 | What you see | What to do |
 | --- | --- |
 | `Invalid FAT entry` (most often `check.txt` stops at step 3) | MBOOT cannot read a file from the drive: files MBOOT wrote were deleted from it. Copy the RootMate files to a PC, format the drive as FAT32 and go through the steps again. |
 | A script stopped at `cmp` | A check failed, nothing after it ran. The last `STEP…`/`BACKUP_…` line shows which one. Create the script again in the app. |
-| The terminal stays silent while the TV boots | UART is off in the TV (step 5), TX/RX are swapped, or the adapter is not in HDMI port 3. |
+| The terminal stays silent while the TV boots | UART is off in the TV (step 6), TX/RX are swapped, or the adapter is not in HDMI port 3. |
 | `usb start 1` finds 0 devices | The drive is in the wrong USB port or is not FAT32. |
 | "Reboot the TV" does not work | Developer options and USB debugging are off (the Permissions screen) or debugging was not allowed. You can unplug the TV instead. |
 | The app reports an incompatible file system or partition | Format the whole drive as FAT32, a single partition. |
 | The TV does not boot after flashing | [recovery.en.md](recovery.en.md); rollback below. |
 
 
-## 8. Rollback
+## 9. Rollback
 
 In MBOOT:
 ~~~text
