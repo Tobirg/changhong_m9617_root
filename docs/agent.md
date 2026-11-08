@@ -2,18 +2,19 @@
 
 How an AI agent (or any script) roots the TV with RootMate without the remote: RootMate takes commands over adb
 and answers in JSON, the MBOOT console is driven over the UART adapter. The flow and the scripts are the same as in
-the "Semi-auto" mode of the app ([guide.md](guide.md), step 4): only who presses the buttons changes.
+the "Semi-auto" mode of the app ([guide.en.md](guide.en.md), section 6): only who presses the buttons changes.
 
 Русская версия инструкции для людей: [guide.md](guide.md). Этот файл для агентов, поэтому на английском.
 
 ## What a human has to do (once)
 
 1. Wire the UART adapter (3.3 V TTL, 115200 8N1, no VCC; pins in [recovery.en.md](recovery.en.md)) and tell the agent its port.
-2. Put a FAT32 USB drive into the USB port the guide names (`usb start 1` in MBOOT scans only that port).
-3. Turn on developer options (Settings → System → About → press "Build" 7 times) and "USB debugging" (Settings →
+2. Turn UART on once: RootMate → "Open the engineering menu" → Design Mode → Uart → On ([guide.en.md](guide.en.md), section 5).
+3. Put a FAT32 USB drive into the USB port the guide names (`usb start 1` in MBOOT scans only that port).
+4. Turn on developer options (Settings → System → About → press "Build" 7 times) and "USB debugging" (Settings →
    System → Developer options). On this TV that also makes adbd listen on tcp 5555, so `adb connect <tv-ip>:5555` works.
-4. The first `adb connect` shows "Allow USB debugging?" on the TV: "Always allow".
-5. Approve the steps that write the eMMC (see [Safety](#safety)) when the agent asks.
+5. The first `adb connect` shows "Allow USB debugging?" on the TV: "Always allow".
+6. Approve the steps that write the eMMC (see [Safety](#safety)) when the agent asks.
 
 Everything else the agent can do itself.
 

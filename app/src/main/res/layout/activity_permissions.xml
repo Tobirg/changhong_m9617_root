@@ -1,213 +1,136 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Three compact cards (status and button on one line) so the screen fits a 1080p TV without scrolling. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
+    android:fillViewport="true"
     android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp"
+        android:paddingStart="24dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="16dp"
         android:clipToPadding="false">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-medium"
-            android:layout_marginBottom="18dp"
+            android:layout_marginBottom="10dp"
             android:text="@string/perm_screen_title"
             android:textColor="@color/text_primary"
-            android:textSize="20sp" />
+            android:textSize="18sp" />
 
-
+        <!-- All files access -->
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/PermCard"
             app:cardBackgroundColor="@color/surface"
             app:cardCornerRadius="14dp"
             app:cardElevation="0dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+            <LinearLayout style="@style/PermCardBody">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="@string/perm_storage_title"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp" />
+                <TextView style="@style/PermTitle" android:text="@string/perm_storage_title" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/perm_storage_desc"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                <TextView style="@style/PermDesc" android:text="@string/perm_storage_desc" />
 
-                <TextView
-                    android:id="@+id/permStorageStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    tools:text="Не разрешено" />
+                <LinearLayout style="@style/PermRow">
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_horizontal" android:orientation="horizontal" android:weightSum="3">
-<com.google.android.material.button.MaterialButton
-                    android:id="@+id/permStorageButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
- android:layout_weight="2"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="10dp"
-                    android:textColor="@color/accent"
-                    android:textSize="12sp"
-                    app:cornerRadius="10dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    app:strokeColor="@color/accent"
-                    tools:text="Выдать разрешение" />
-</LinearLayout>
+                    <TextView
+                        android:id="@+id/permStorageStatus"
+                        style="@style/PermStatus"
+                        tools:text="Не разрешено" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/permStorageButton"
+                        style="@style/PermButton"
+                        tools:text="Выдать разрешение" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Install unknown apps -->
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            style="@style/PermCard"
+            android:layout_marginTop="10dp"
             app:cardBackgroundColor="@color/surface"
             app:cardCornerRadius="14dp"
             app:cardElevation="0dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+            <LinearLayout style="@style/PermCardBody">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="@string/perm_install_title"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp" />
+                <TextView style="@style/PermTitle" android:text="@string/perm_install_title" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/perm_install_desc"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                <TextView style="@style/PermDesc" android:text="@string/perm_install_desc" />
 
-                <TextView
-                    android:id="@+id/permInstallStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                <LinearLayout style="@style/PermRow">
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_horizontal" android:orientation="horizontal" android:weightSum="3">
-<com.google.android.material.button.MaterialButton
-                    android:id="@+id/permInstallButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
- android:layout_weight="2"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="10dp"
-                    android:textColor="@color/accent"
-                    android:textSize="12sp"
-                    app:cornerRadius="10dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    app:strokeColor="@color/accent" />
-</LinearLayout>
+                    <TextView
+                        android:id="@+id/permInstallStatus"
+                        style="@style/PermStatus" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/permInstallButton"
+                        style="@style/PermButton" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Developer options and USB debugging (adb) -->
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            style="@style/PermCard"
+            android:layout_marginTop="10dp"
             app:cardBackgroundColor="@color/surface"
             app:cardCornerRadius="14dp"
             app:cardElevation="0dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+            <LinearLayout style="@style/PermCardBody">
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="@string/perm_adb_title"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp" />
+                <TextView style="@style/PermTitle" android:text="@string/perm_adb_title" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/perm_adb_desc"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                <TextView style="@style/PermDesc" android:text="@string/perm_adb_desc" />
 
-                <TextView
-                    android:id="@+id/permAdbStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                <LinearLayout style="@style/PermRow">
 
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_horizontal" android:orientation="horizontal" android:weightSum="3">
-<com.google.android.material.button.MaterialButton
-                    android:id="@+id/permAdbButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
- android:layout_weight="2"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="10dp"
-                    android:textColor="@color/accent"
-                    android:textSize="12sp"
-                    app:cornerRadius="10dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    app:strokeColor="@color/accent" />
-</LinearLayout>
+                    <TextView
+                        android:id="@+id/permAdbStatus"
+                        style="@style/PermStatus" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/permAdbButton"
+                        style="@style/PermButton" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_horizontal" android:orientation="horizontal" android:weightSum="3">
-<com.google.android.material.button.MaterialButton
-            android:id="@+id/permDone"
-            android:focusedByDefault="true"
-            style="@style/Widget.MaterialComponents.Button"
-            android:layout_width="0dp"
- android:layout_weight="2"
-            android:layout_height="44dp"
-            android:layout_marginTop="20dp"
-            android:text="@string/perm_done_button"
-            android:textSize="13sp"
-            app:cornerRadius="12dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp" />
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:weightSum="3">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/permDone"
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginTop="14dp"
+                android:layout_weight="2"
+                android:focusedByDefault="true"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="@string/perm_done_button"
+                android:textSize="13sp"
+                app:cornerRadius="12dp" />
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

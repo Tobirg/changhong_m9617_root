@@ -196,7 +196,7 @@
     <string name="err_adb_no_answer">adb did not answer. Opening the settings to reboot by hand.</string>
     <string name="err_adb_denied">Debugging was not allowed. Allow it on the TV or reboot the TV by hand in the settings.</string>
     <string name="perm_adb_title">Developer options and USB debugging (adb)</string>
-    <string name="perm_adb_desc">Needed so the app can reboot the TV into MBOOT by itself, and for the agent mode. Developer options: \"About\" → press \"Build\" 7 times. Then \"Developer options\" → \"USB debugging\".</string>
+    <string name="perm_adb_desc">Needed so the app can reboot the TV into MBOOT by itself and can be driven over adb. To turn on: \"About\" → press \"Build\" 7 times, then \"Developer options\" → \"USB debugging\".</string>
     <string name="perm_adb_need_dev">Developer options are off</string>
     <string name="perm_adb_need_usb">USB debugging is off</string>
     <string name="perm_adb_no_port">adb does not listen on port 5555</string>
