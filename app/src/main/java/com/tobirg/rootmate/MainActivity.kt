@@ -113,10 +113,12 @@ class MainActivity : AppCompatActivity() {
         when (pendingPickTarget) {
             "manual" -> {
                 appendLog(getString(R.string.picked_file, path))
+                warnIfSlotMismatch(path)
                 runBusy { patch(File(path)) }
             }
             "full" -> {
                 appendLog(getString(R.string.picked_original, path))
+                warnIfSlotMismatch(path)
                 runBusy { fullPatch(path) }
             }
         }
@@ -196,6 +198,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         defaultFocusView.post { defaultFocusView.requestFocus() }
         updateGatedButtons()
+        updateSlotStatus()
         if (!permissionsIntroShown && (!hasStoragePermission() || !hasInstallPermission())) {
             permissionsIntroShown = true
             openPermissionsScreen()
