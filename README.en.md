@@ -26,3 +26,4 @@ The bootloader part (UART/MBOOT) is still done by hand, see the guide.
 
 - [skip_initramfs fix via adb shell](scripts/skipfix.sh) (fallback)
 - [App development notes](docs/app.md) (in Russian)
+- [Guide for agents (AI/scripts): RootMate over adb, MBOOT over UART](docs/agent.md)

@@ -29,111 +29,42 @@
                 android:padding="20dp"
                 android:clipToPadding="false"
                 android:gravity="center_vertical">
-            <TextView
-                android:id="@+id/stageStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:textColor="@color/accent"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+            <TextView style="@style/SectionLabel" android:text="@string/section_prepare" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnNextStep"
+                android:id="@+id/btnUartMenu"
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:focusedByDefault="true"
+                android:text="@string/enable_uart"
+                android:textSize="13sp"
+                app:cornerRadius="12dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_horizontal"
+                android:text="@string/uart_hint"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnInstallMagisk"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginBottom="14dp"
+                android:layout_marginTop="8dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="@string/next_make_probe"
+                android:text="@string/install_magisk"
                 android:textSize="13sp"
-                android:textColor="@color/accent"
+                android:textColor="@color/text_primary"
                 app:cornerRadius="12dp"
-                app:strokeColor="@color/accent" />
-
-            <TextView style="@style/SectionLabel" android:text="@string/section_factory" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:baselineAligned="false"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnOpenFactoryMenu"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_weight="1"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="@string/open_factory_menu"
-                    android:textSize="13sp"
-                    android:focusedByDefault="true"
-                    android:textColor="@color/accent"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="@color/accent" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnUartMenu"
-                        style="@style/Widget.MaterialComponents.Button"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:insetTop="0dp"
-                        android:insetBottom="0dp"
-                        android:text="@string/enable_uart"
-                        android:textSize="13sp"
-                        app:cornerRadius="12dp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:gravity="center_horizontal"
-                        android:text="@string/uart_hint"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="@color/surface_alt" />
-
-            <TextView style="@style/SectionLabel" android:text="@string/section_install" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:orientation="horizontal"
-                android:weightSum="3">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnInstallMagisk"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_weight="2"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="@string/install_magisk"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_primary"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="@color/outline" />
-            </LinearLayout>
+                app:strokeColor="@color/outline" />
 
             <TextView
                 android:id="@+id/magiskStatus"
@@ -145,58 +76,6 @@
                 android:text="@string/permission_required_caption"
                 android:visibility="gone" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center_horizontal"
-                android:orientation="horizontal"
-                android:weightSum="3">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnProbeScript"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_weight="2"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="@string/btn_probe_script"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_primary"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="@color/outline" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center_horizontal"
-                android:orientation="horizontal"
-                android:weightSum="3">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnBackupScript"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_weight="2"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:text="@string/btn_backup_script"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_primary"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="@color/outline" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/captionBackupScript"
-                style="@style/PermissionCaption"
-                android:text="@string/permission_required_caption"
-                android:visibility="gone" />
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -204,87 +83,201 @@
                 android:layout_marginBottom="10dp"
                 android:background="@color/surface_alt" />
 
-            <TextView style="@style/SectionLabel" android:text="@string/section_patch" />
-            
-            <TextView
-                android:id="@+id/slotStatus"
-                style="@style/PermissionCaption"
-                android:layout_marginBottom="6dp" />
-
-            <LinearLayout
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/modeGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:baselineAligned="false"
-                android:layout_marginBottom="6dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:minLines="2"
-                    android:text="@string/patch_full_title"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:minLines="2"
-                    android:text="@string/patch_manual_title"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:baselineAligned="false"
-                android:orientation="horizontal">
+                app:checkedButton="@+id/btnModeAuto"
+                app:selectionRequired="true"
+                app:singleSelection="true">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnFullPatch"
+                    android:id="@+id/btnModeAuto"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
-                    android:layout_height="72dp"
+                    android:layout_height="48dp"
                     android:layout_weight="1"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
-                    android:text="@string/full_patch"
+                    android:text="@string/mode_auto"
                     android:textSize="13sp"
-                    android:paddingLeft="6dp"
-                    android:paddingRight="6dp"
+                    android:letterSpacing="0.02"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:maxLines="1"
+                    app:cornerRadius="12dp"
+                    android:textColor="@color/mode_text"
+                    app:backgroundTint="@color/mode_bg"
+                    app:strokeColor="@color/accent" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnModeManual"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/mode_manual"
+                    android:textSize="13sp"
+                    android:letterSpacing="0.02"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:maxLines="1"
+                    app:cornerRadius="12dp"
+                    android:textColor="@color/mode_text"
+                    app:backgroundTint="@color/mode_bg"
+                    app:strokeColor="@color/accent" />
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            <!-- Semi-automatic mode: the step-by-step flow (Wizard) -->
+            <LinearLayout
+                android:id="@+id/modeAutoPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/stageStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="@color/accent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/driveStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="-4dp"
+                    android:layout_marginBottom="8dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnNextStep"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/next_make_probe"
+                    android:textSize="13sp"
                     android:textColor="@color/accent"
                     app:cornerRadius="12dp"
                     app:strokeColor="@color/accent" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnPickInput"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="72dp"
-                    android:layout_weight="1"
+                    android:id="@+id/btnChangeDrive"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="4dp"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
-                    android:text="@string/pick_input"
-                    android:textSize="13sp"
-                    android:paddingLeft="6dp"
-                    android:paddingRight="6dp"
-                    android:layout_marginStart="8dp"
-                    android:textColor="@color/text_primary"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="@color/outline" />
+                    android:text="@string/btn_change_drive"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    app:cornerRadius="12dp" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/captionFullPatch"
-                style="@style/PermissionCaption"
-                android:text="@string/permission_required_caption"
-                android:visibility="gone" />
+            <!-- Manual mode: choose the patching method -->
+            <LinearLayout
+                android:id="@+id/modeManualPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView style="@style/SectionLabel" android:text="@string/section_patch" />
+
+                <TextView
+                    android:id="@+id/slotStatus"
+                    style="@style/PermissionCaption"
+                    android:layout_marginBottom="6dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:layout_marginBottom="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:minLines="2"
+                        android:text="@string/patch_full_title"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:minLines="2"
+                        android:text="@string/patch_manual_title"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnFullPatch"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="72dp"
+                        android:layout_weight="1"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="@string/full_patch"
+                        android:textSize="13sp"
+                        android:paddingLeft="6dp"
+                        android:paddingRight="6dp"
+                        android:textColor="@color/accent"
+                        app:cornerRadius="12dp"
+                        app:strokeColor="@color/accent" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPickInput"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="72dp"
+                        android:layout_weight="1"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="@string/pick_input"
+                        android:textSize="13sp"
+                        android:paddingLeft="6dp"
+                        android:paddingRight="6dp"
+                        android:layout_marginStart="8dp"
+                        android:textColor="@color/text_primary"
+                        app:cornerRadius="12dp"
+                        app:strokeColor="@color/outline" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/captionFullPatch"
+                    style="@style/PermissionCaption"
+                    android:text="@string/permission_required_caption"
+                    android:visibility="gone" />
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"

@@ -15,11 +15,20 @@ object TvFocus {
 
     private const val DIMMED_ALPHA = 0.6f
 
-    fun apply(view: View, cornerDp: Float = 12f, dimmed: () -> Boolean = { false }) {
+    /** Which corners of the outline are rounded; the inner corners of a segmented switch's buttons are square. */
+    enum class Corners { ALL, START, END }
+
+    fun apply(view: View, cornerDp: Float = 12f, corners: Corners = Corners.ALL, dimmed: () -> Boolean = { false }) {
         val density = view.resources.displayMetrics.density
+        val r = cornerDp * density
         val ring = GradientDrawable().apply {
             setColor(Color.TRANSPARENT)
-            cornerRadius = cornerDp * density
+            when (corners) {
+                Corners.ALL -> cornerRadius = r
+                // top-left, top-right, bottom-right, bottom-left (x, y each)
+                Corners.START -> cornerRadii = floatArrayOf(r, r, 0f, 0f, 0f, 0f, r, r)
+                Corners.END -> cornerRadii = floatArrayOf(0f, 0f, r, r, r, r, 0f, 0f)
+            }
             setStroke((3 * density).toInt(), Color.WHITE)
         }
         view.foreground = StateListDrawable().apply {

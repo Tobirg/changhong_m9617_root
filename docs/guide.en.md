@@ -28,14 +28,14 @@
 
 Terminal settings: **115200, 8N1, no flow control**. Do not connect the adapter's VCC.
 
-If the terminal shows nothing, UART may be switched off in the TV. In RootMate press **Enable UART** (Включить UART): it opens the engineering menu, then set **Design Mode → Uart → On** by hand. This works only while Android is running.
+If the terminal shows nothing, UART may be switched off in the TV. In RootMate press **Open the engineering menu** (Открыть инженерное меню, caption "Turns UART on"): it opens the right page of the engineering menu, then set **Design Mode → Uart → On** by hand. This works only while Android is running.
 
 
 ## 3. Prepare the USB drive
 
 On a PC, format the drive as **FAT32**, a single partition. Download and copy to it:
 
-- **RootMate-1.1.apk**: [latest release](https://github.com/Tobirg/changhong_m9617_root/releases/latest). The app downloads and installs Magisk by itself (the TV needs internet).
+- **RootMate-1.0.apk**: [latest release](https://github.com/Tobirg/changhong_m9617_root/releases/latest). The app downloads and installs Magisk by itself (the TV needs internet).
 - Optionally the [Magisk APK](https://github.com/topjohnwu/Magisk/releases/latest): needed after the data wipe if the TV has no internet.
 
 If the drive was used before, delete old `*_magisk_patched*.img` files so you do not mix them up.
@@ -43,9 +43,9 @@ If the drive was used before, delete old `*_magisk_patched*.img` files so you do
 
 ## 4. Dump the original boot images from eMMC to USB
 
-> **Quick way (the wizard in RootMate).** Install RootMate (step 5, Magisk is not needed for this) and put a FAT32 drive into the TV. Everything the app and the scripts make lives in the drive root; the top of the app shows "Stage: ..." recognised from the files and offers the next step. Every MBOOT script ends with a marker (`PROBE.OK`, `BACKUP.OK`, `FLASH.OK`), so an unfinished run is told apart from a finished one.
+> **Quick way (the wizard in RootMate).** Install RootMate (step 5, Magisk is not needed for this) and put a FAT32 drive into the TV. Everything the app and the scripts make lives in the drive root; in the "Semi-auto" mode (selected at start) the app shows the stage it recognised from the files (e.g. "Step 1 of 4, probe: ...") and offers the next step. The app picks the drive once and shows it under the stage (with several drives it asks); a drive in exFAT/NTFS, or with FAT not on the first partition, is rejected right away. Every MBOOT script ends with a marker (`PROBE.OK`, `BACKUP.OK`, `FLASH.OK`), so an unfinished run is told apart from a finished one.
 >
-> 1. **Probe.** Press "Create the probe script": the app writes `probe.txt` and shows how to get into the MBOOT console. Hold Enter in the UART terminal, press "Reboot the TV" (the app reboots the TV without root through its own adb; the first time the TV asks "USB debugging": "Always allow") and type `usb start 1`, `udstar probe.txt`. The script saves the partition table `PTABLE.BIN` and the environment `ENV.TXT` (it contains the serial number, do not publish it) and reboots the TV by itself.
+> 1. **Probe.** Press "Create the probe script": the app writes `probe.txt` and shows how to get into the MBOOT console. Hold Enter in the UART terminal, press "Reboot the TV" (the app reboots the TV through its own adb: it needs developer options and "USB debugging", the app asks for them on its Permissions screen and opens the right settings page; the first time the TV asks "Allow USB debugging?": "Always allow". Or unplug the TV) and type `usb start 1`, `udstar probe.txt`. The script saves the partition table `PTABLE.BIN` and the environment `ENV.TXT` (it contains the serial number, do not publish it) and reboots the TV by itself.
 > 2. **Backup.** At the next start the app sees the result and offers to create `backup.txt` with the names, sizes and memory addresses of your very TV (nothing about the TV is built into the app). The same actions: `usb start 1`, `udstar backup.txt`. The script saves `boot_a`, `boot_b`, `misc` as `BOOT_A.IMG`, `BOOT_B.IMG`, `MISC.IMG` (taking `_2`, `_3`... if such files exist), checks the header, reads every file back and compares it with the eMMC, and writes a `*.CRC` next to each. The app recomputes the CRC32 and the sizes of the saved files and only then calls the stage done. Copy `BOOT_*.IMG` to a PC right away.
 > 3. **Patch.** The app offers to patch the active slot image from the backup (Magisk is needed) and creates `check.txt`, `flash.txt`, `rollback.txt`.
 > 4. **Flash.** In the MBOOT console: `usb start 1`, `udstar check.txt` (checks only, ends with `CHECK_OK_...`, you stay in the console), then `udstar flash.txt`: it verifies the slot, the original and the patched image by CRC32, unlocks, writes, reads back and compares, wipes data (if the boot state changes) and reboots. If something goes wrong: `udstar rollback.txt`.
@@ -54,7 +54,19 @@ If the drive was used before, delete old `*_magisk_patched*.img` files so you do
 >
 > **Important about the drive.** Do not delete files from it that MBOOT wrote (the app only renames them). MBOOT marks the end of a file in the FAT with `0xFFFFFFFF`; if such a file is deleted and Android takes its clusters it keeps the top 4 bits, and MBOOT can no longer read the new file (`Invalid FAT entry`, `check.txt` stops at step 3 before writing anything). Then copy the files to a PC, format the drive (FAT32) and go through the stages again.
 >
-> The manual commands below stay as a fallback.
+> <img src="img/09-wizard-drive.png" width="720" alt="Choosing the drive for the stages">
+>
+> The drive for the stages is chosen once. A formatted drive gets a new serial number, and the app offers to switch to it with one button.
+>
+> <img src="img/07-wizard-continue.png" width="720" alt="The app recognised the stage and offers to continue">
+>
+> On start the app recognises the stage from the files on the drive and offers the next step.
+>
+> <img src="img/08-wizard-mboot.png" width="720" alt="How to run a script in MBOOT">
+>
+> After every script: what to do in the UART terminal and which commands to type. "Reboot the TV" reboots the TV through adb.
+>
+> The manual commands below stay as a fallback. An agent (AI or a script) can also go through the stages over adb and UART: [agent.md](agent.md).
 
 
 Unplug the TV from the mains.  
@@ -97,7 +109,7 @@ fatls usb 0:1
 Expected:
 ~~~text
             system volume information/
-  7734485   RootMate-1.1.apk
+  7734485   RootMate-1.0.apk
 
 1 file(s), 1 dir(s)
 ~~~
@@ -152,7 +164,7 @@ Expected:
             system volume information/
  32505856   boot_a.img
  32505856   boot_b.img
-  7734485   RootMate-1.1.apk
+  7734485   RootMate-1.0.apk
 
 3 file(s), 1 dir(s)
 ~~~
@@ -177,7 +189,7 @@ reset
 
 ## 5. Install RootMate and Magisk
 
-After boot, open the stock file manager on the TV and install **RootMate-1.1.apk** from the drive (allow installs from unknown sources). If the stock manager cannot open APKs, use `adb install`.  
+After boot, open the stock file manager on the TV and install **RootMate-1.0.apk** from the drive (allow installs from unknown sources). If the stock manager cannot open APKs, use `adb install`.  
 <img width="332" height="276" alt="image" src="https://github.com/user-attachments/assets/6d52afa9-80ed-493b-a0e8-b74b397f525e" />
 
 Open RootMate from the TV's app list. On first launch it shows a permissions screen: grant **All files access** and **Install unknown apps**, then press **Done**.
@@ -310,7 +322,7 @@ Reboot
 reset
 ~~~
 
-After the reset RootMate is gone with the data. Install Magisk again: either the APK from the drive, or **RootMate-1.1.apk** → **Download and install Magisk**.  
+After the reset RootMate is gone with the data. Install Magisk again: either the APK from the drive, or **RootMate-1.0.apk** → **Download and install Magisk**.  
 **After installing, press Open immediately: there is no icon in the stock launcher. You can reopen it later from Android settings.**  
 When asked for additional setup, agree.
 

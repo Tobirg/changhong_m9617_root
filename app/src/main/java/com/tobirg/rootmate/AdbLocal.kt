@@ -138,6 +138,28 @@ object AdbLocal {
         return (Base64.encodeToString(b.array(), Base64.NO_WRAP) + " rootmate@tv").toByteArray(Charsets.US_ASCII) + byteArrayOf(0)
     }
 
+    /** What the TV still needs for adb: developer options, USB debugging, adbd listening on tcp 5555. */
+    class Status(val developer: Boolean, val usbDebugging: Boolean, val listening: Boolean) {
+        val ready get() = developer && usbDebugging && listening
+    }
+
+    /** Checks the settings and tries the port (up to 500 ms): call off the UI thread. */
+    fun status(context: Context): Status {
+        fun global(name: String) = try {
+            android.provider.Settings.Global.getInt(context.contentResolver, name, 0) == 1
+        } catch (e: Exception) {
+            false
+        }
+        val dev = global(android.provider.Settings.Global.DEVELOPMENT_SETTINGS_ENABLED)
+        val usb = global(android.provider.Settings.Global.ADB_ENABLED)
+        val open = try {
+            Socket().use { it.connect(InetSocketAddress("127.0.0.1", PORT), 500); true }
+        } catch (e: IOException) {
+            false
+        }
+        return Status(dev, usb, open)
+    }
+
     /**
      * Connects to the local adbd, authenticates and starts the reboot. Blocks (call off the UI thread):
      * up to [authWaitMs] while the user answers the debugging dialog. [onAskUser] runs when that dialog is expected.

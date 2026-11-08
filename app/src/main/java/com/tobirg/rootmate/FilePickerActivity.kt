@@ -113,8 +113,11 @@ class FilePickerActivity : Activity() {
     /** Internal storage plus every mounted removable volume (USB flash drives, SD cards). */
     private fun findRoots(): List<Pair<String, File>> {
         val result = LinkedHashMap<String, Pair<String, File>>()
-        fun add(label: String, f: File) {
-            if (!f.isDirectory || f.listFiles() == null) return
+        fun add(label: String, f: File, mustHaveFiles: Boolean = false) {
+            val list = if (f.isDirectory) f.listFiles() else null
+            if (list == null) return
+            // the fallback mount points (/mnt/samba, /mnt/iso, /mnt/usb...) exist even with nothing mounted: skip empty ones
+            if (mustHaveFiles && list.isEmpty()) return
             val key = try { f.canonicalPath } catch (e: Exception) { f.absolutePath }
             if (!result.containsKey(key)) result[key] = label to f
         }
@@ -144,7 +147,7 @@ class FilePickerActivity : Activity() {
                 if (n == "self" || n == "emulated" || n == "sdcard0" || n == "runtime" || n == "user" ||
                     n == "asec" || n == "obb" || n == "secure" || n == "shell" || n == "sdcard"
                 ) return@forEach
-                add(getString(R.string.picker_drive, n), f)
+                add(getString(R.string.picker_drive, n), f, mustHaveFiles = true)
             }
         }
         return result.values.toList()

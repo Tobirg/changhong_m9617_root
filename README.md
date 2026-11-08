@@ -26,3 +26,4 @@
 
 - [Скрипт исправления skip_initramfs через adb shell](scripts/skipfix.sh) (запасной вариант)
 - [Заметки по приложению для доработок](docs/app.md)
+- [Инструкция для агентов (ИИ/скрипты): RootMate по adb, MBOOT по UART](docs/agent.md)

@@ -33,7 +33,8 @@
         android:theme="@style/Theme.RootMate">
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -50,6 +51,16 @@
             android:name=".PermissionsActivity"
             android:exported="false"
             android:theme="@style/Theme.RootMate" />
+
+        <!-- Agent mode (docs/agent.md): commands over adb. DUMP is held by the adb shell, never by ordinary apps. -->
+        <receiver
+            android:name=".AgentReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="com.tobirg.rootmate.AGENT" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

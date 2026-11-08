@@ -10,3 +10,4 @@ captures/
 *.dex
 .externalNativeBuild/
 .cxx/
+scripts/agent/mboot.log
