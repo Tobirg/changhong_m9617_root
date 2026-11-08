@@ -12,6 +12,8 @@ The manual way (your own MBOOT commands, patching a picked file) stays as a fall
 
 - A USB–UART **TTL** adapter (not RS-232 ±12 V).
 - An HDMI connector: solder/terminal type, or sacrifice an old cable. A ready-made debug connector is the easiest: search AliExpress for "hdmi breakout" (with WB delivery it arrived in 9 days). You can also open the TV and connect to the board UART, but buying a connector is cheaper than cracking the panel.
+
+  <img src="img/hdmi-breakout.png" width="320" alt="Example of an HDMI breakout debug connector">
 - A UART terminal: MobaXterm, PuTTY or similar (it must send keystrokes immediately, not via a separate Send button).
 - A PC: for the UART terminal and copying files.
 - A USB drive formatted as **FAT32**, a single partition.
