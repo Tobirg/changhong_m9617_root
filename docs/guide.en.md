@@ -68,7 +68,7 @@ The main screen: buttons on the left, the log on the right.
 
 <img src="img/01-main.png" width="720" alt="RootMate main screen">
 
-Press **Download and install Magisk** (Скачать и установить Magisk). The app finds the latest release on GitHub, downloads it and starts the install; confirm in the system dialog (**Install**). A line **Magisk installed: 31.1** appears under the button. You do not need to open Magisk or patch anything in it.
+Press **Download and install Magisk** (Скачать и установить Magisk). The app finds the latest release on GitHub, downloads it and starts the install; confirm in the system dialog (**Install**). A line **Magisk installed** with the version number appears under the button. You do not need to open Magisk or patch anything in it.
 
 <img src="img/03-install-magisk.png" width="720" alt="Magisk install system dialog">
 

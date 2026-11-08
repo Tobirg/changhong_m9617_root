@@ -32,7 +32,7 @@ adb connect <tv-ip>:5555
 adb install -r RootMate-1.0.apk
 adb shell appops set --uid com.tobirg.rootmate MANAGE_EXTERNAL_STORAGE allow
 adb shell appops set com.tobirg.rootmate REQUEST_INSTALL_PACKAGES allow
-adb install -r Magisk-v31.1.apk          # or let RootMate download it (button "Download and install Magisk")
+adb install -r Magisk-vX.Y.apk           # or let RootMate download it (button "Download and install Magisk")
 python scripts/agent/rootmate.py open    # RootMate on screen
 ```
 
