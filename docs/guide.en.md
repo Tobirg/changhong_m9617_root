@@ -11,7 +11,7 @@ The manual way (your own MBOOT commands, patching a picked file) stays as a fall
 ## 1. What you need
 
 - A USB–UART **TTL** adapter (not RS-232 ±12 V).
-- An HDMI connector: solder/terminal type, or sacrifice an old cable. You can also open the TV and connect to the board UART, but buying a cable is cheaper than cracking the panel.
+- An HDMI connector: solder/terminal type, or sacrifice an old cable. A ready-made debug connector is the easiest: search AliExpress for "hdmi breakout" (with WB delivery it arrived in 9 days). You can also open the TV and connect to the board UART, but buying a connector is cheaper than cracking the panel.
 - A UART terminal: MobaXterm, PuTTY or similar (it must send keystrokes immediately, not via a separate Send button).
 - A PC: for the UART terminal and copying files.
 - A USB drive formatted as **FAT32**, a single partition.
@@ -125,7 +125,7 @@ Steps 1, 2 and 4 end with running a script in the MBOOT console. Step 1 describe
    ~~~text
    udstar probe.txt
    ~~~
-   At the start `udstar` prints `Saving Environment to MMC`: that is MBOOT saving its own variables, partitions are not touched. Then the script prints its commands and `PROBE_OK` at the end, and reboots the TV into Android by itself. You no longer need to hold Enter.
+   At the start `udstar` prints `Saving Environment to MMC`: that is MBOOT saving its own variables, partitions are not touched. Then the script prints its commands and `PROBE_OK` at the end. **After that the TV reboots by itself** into Android: you do not need to press anything, and do not hold Enter any more (otherwise the TV stops in MBOOT again).
 
 The probe writes nothing to the eMMC: it saves the partition table `PTABLE.BIN` and the bootloader environment `ENV.TXT` to the drive (it contains the TV's serial number, do not publish it).
 
@@ -136,6 +136,9 @@ The probe writes nothing to the eMMC: it saves the partition table `PTABLE.BIN` 
 3. Type:
    ~~~text
    usb start 1
+   ~~~
+
+   ~~~text
    udstar backup.txt
    ~~~
    It ends with `BACKUP_OK`, and the TV reboots into Android by itself.
@@ -152,7 +155,7 @@ This step happens in Android only, no MBOOT. Open RootMate after the boot and pr
 
 - takes the image of the **active slot** from the backup (the one the TV boots from now; flashing the other slot is useless);
 - runs `boot_patch.sh` from the installed Magisk and applies the `skip_initramfs` fix (below);
-- saves `BOOT_X_magisk_patched.img` next to the backup (the same size as the original, 32505856 bytes);
+- saves `BOOT_X_magisk_patched.img` next to the backup (the same size as the original);
 - writes `check.txt`, `flash.txt` and `rollback.txt` with your slot, file names and CRC32 checksums.
 
 It takes about a minute, the buttons are locked meanwhile. Do not leave the app. At the end the app shows the hint for step 4:
@@ -167,6 +170,9 @@ It takes about a minute, the buttons are locked meanwhile. Do not leave the app.
 2. Run the check:
    ~~~text
    usb start 1
+   ~~~
+
+   ~~~text
    udstar check.txt
    ~~~
    `check.txt` runs all the checks of the flash without writing anything: the active slot in `misc`, CRC32 of the backup and of the patched image. It must end with `CHECK_OK_slot_a_nothing_written` (or `_b`). The TV stays in MBOOT, you do not need to leave the console.
@@ -209,6 +215,9 @@ The slot matches the one you flashed, `verifiedbootstate` is `orange`, `su` retu
 Get into the MBOOT console as in step 1 of section 7 (Enter in the terminal and a reboot of the TV) and type:
 ~~~text
 usb start 1
+~~~
+
+~~~text
 udstar rollback.txt
 ~~~
 
@@ -258,41 +267,104 @@ bootcmd=mmc read.p 0x25000000 boot 0x1F00000; bootm 0x25000000
 If your values differ, use yours. Dump both slots one by one:
 ~~~text
 usb start 1
+~~~
+
+~~~text
 mmc read.p 0x25000000 boot_a 0x1F00000
+~~~
+
+~~~text
 fatwrite usb 0:1 0x25000000 BOOT_A.IMG 0x1F00000
+~~~
+
+~~~text
 mmc read.p 0x25000000 boot_b 0x1F00000
+~~~
+
+~~~text
 fatwrite usb 0:1 0x25000000 BOOT_B.IMG 0x1F00000
+~~~
+
+~~~text
 fatls usb 0:1
+~~~
+
+~~~text
 usb stop
+~~~
+
+~~~text
 reset
 ~~~
-`fatls` must show both files with 32505856 bytes.
+`fatls` must show both files with the size of the boot partition (the second number in `bootcmd`; in the example 0x1F00000 = 32505856 bytes).
 
 ### Flash by hand
 
 ~~~text
 setenv devicestate unlock
+~~~
+
+~~~text
 saveenv
+~~~
+
+~~~text
 printenv devicestate
+~~~
+
+~~~text
 usb start 1
+~~~
+
+~~~text
 fatls usb 0:1
+~~~
+
+~~~text
 fatload usb 0:1 0x25000000 BOOT_X_magisk_patched.img
+~~~
+
+~~~text
 mmc write.p 0x25000000 boot_X 0x1F00000 0
+~~~
+
+~~~text
 recovery_wipe_partition data
+~~~
+
+~~~text
 reset
 ~~~
-`printenv devicestate` must show `devicestate=unlock`, `fatload` must read exactly 32505856 bytes, otherwise stop. `recovery_wipe_partition data` deletes user data; **if the TV does not boot after flashing, this step was most likely skipped**.
+`printenv devicestate` must show `devicestate=unlock`, `fatload` must read exactly the size of the boot partition (the same number from `bootcmd`), otherwise stop. `recovery_wipe_partition data` deletes user data; **if the TV does not boot after flashing, this step was most likely skipped**.
 
 ### Rollback by hand
 
 This writes **the original image of the active slot**:
 ~~~text
 setenv devicestate lock
+~~~
+
+~~~text
 saveenv
+~~~
+
+~~~text
 usb start 1
+~~~
+
+~~~text
 fatload usb 0:1 0x25000000 BOOT_X.IMG
+~~~
+
+~~~text
 mmc write.p 0x25000000 boot_X 0x1F00000 0
+~~~
+
+~~~text
 recovery_wipe_partition data
+~~~
+
+~~~text
 reset
 ~~~
 
