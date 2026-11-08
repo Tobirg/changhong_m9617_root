@@ -22,7 +22,7 @@ The manual way (your own MBOOT commands, patching a picked file) stays as a fall
 
 ## 2. Build the UART adapter
 
-<img width="1702" height="1702" alt="photo_2026-10-31_20-34-52" src="https://github.com/user-attachments/assets/2ae974fb-9402-445b-80c8-4b52a521ba75" />
+<img width="480" alt="photo_2026-10-31_20-34-52" src="https://github.com/user-attachments/assets/2ae974fb-9402-445b-80c8-4b52a521ba75" />
 
 | TV HDMI pin | Function (TV side) | USB–UART |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ On a PC, format the drive as **FAT32**, a single partition. Download and copy to
 
 ## 4. Connect everything to the TV
 
-<img width="2487" height="2503" alt="20261101_111935" src="https://github.com/user-attachments/assets/e6165c5f-8e2b-491a-bfb3-8803b67d4c2e" />
+<img width="480" alt="20261101_111935" src="https://github.com/user-attachments/assets/e6165c5f-8e2b-491a-bfb3-8803b67d4c2e" />
 
 - The UART adapter: into **HDMI port 3** (counting from the bottom), the other end into a USB port of the PC.
 - The drive: into **the USB port closer to the panel**. Use this port for all the steps: it works reliably in Android, and the MBOOT scripts use it too (`usb start 1`).

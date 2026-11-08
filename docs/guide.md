@@ -22,7 +22,7 @@
 
 ## 2. Собираем адаптер UART
 
-<img width="1702" height="1702" alt="photo_2026-10-31_20-34-52" src="https://github.com/user-attachments/assets/2ae974fb-9402-445b-80c8-4b52a521ba75" />
+<img width="480" alt="photo_2026-10-31_20-34-52" src="https://github.com/user-attachments/assets/2ae974fb-9402-445b-80c8-4b52a521ba75" />
 
 | Контакт HDMI телевизора | Назначение относительно ТВ | Подключение USB–UART |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ VCC адаптера не подключать.
 
 ## 4. Подключаем к ТВ
 
-<img width="2487" height="2503" alt="20261101_111935" src="https://github.com/user-attachments/assets/e6165c5f-8e2b-491a-bfb3-8803b67d4c2e" />
+<img width="480" alt="20261101_111935" src="https://github.com/user-attachments/assets/e6165c5f-8e2b-491a-bfb3-8803b67d4c2e" />
 
 - Адаптер UART: в **HDMI порт 3** (отсчёт снизу вверх), другой конец в USB на ПК.
 - Накопитель: в **USB-порт ближе к матрице**. Используйте этот порт на всех шагах: в Android он работает стабильно, к нему же обращаются скрипты в MBOOT (`usb start 1`).
