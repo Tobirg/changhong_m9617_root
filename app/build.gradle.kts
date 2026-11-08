@@ -15,10 +15,25 @@ android {
         versionName = "1.1"
     }
 
+    // Permanent release key (CI passes it via env from GitHub secrets) so that updates install over
+    // older versions. Without the env (local builds) the debug key is used.
+    val releaseKeystore = System.getenv("SIGNING_KEYSTORE_FILE")
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("rootmate") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("SIGNING_PASSWORD")
+                keyAlias = "rootmate"
+                keyPassword = System.getenv("SIGNING_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (releaseKeystore != null) signingConfigs.getByName("rootmate")
+            else signingConfigs.getByName("debug")
         }
     }
 

@@ -390,16 +390,12 @@ class MainActivity : AppCompatActivity() {
     private fun appendWarning(msg: String) {
         val bar = "!".repeat(24)
         val start = logBuf.length
-        logBuf.append(bar).append("
-").append(msg.uppercase()).append("
-").append(bar)
+        logBuf.append(bar).append("\n").append(msg.uppercase()).append("\n").append(bar)
         val end = logBuf.length
         logBuf.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, 0)
         logBuf.setSpan(android.text.style.ForegroundColorSpan(resources.getColor(R.color.warning, theme)), start, end, 0)
         logBuf.setSpan(android.text.style.RelativeSizeSpan(1.25f), start, end, 0)
-        logBuf.append("
-
-")
+        logBuf.append("\n\n")
         log.text = logBuf
         scrollLogToEnd()
     }

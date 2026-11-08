@@ -27,7 +27,18 @@ jobs:
         with:
           gradle-version: 8.7
 
+      - name: Restore signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/rootmate.jks"
+            echo "SIGNING_KEYSTORE_FILE=$RUNNER_TEMP/rootmate.jks" >> "$GITHUB_ENV"
+          fi
+
       - name: Build release APK
+        env:
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: gradle :app:assembleRelease --no-daemon
 
       - name: Upload APK artifact
