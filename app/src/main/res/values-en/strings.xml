@@ -117,5 +117,5 @@
     <string name="dl_progress_unknown">Downloaded: %1$d MB</string>
     <string name="status_slot">Active boot slot: %1$s (patch and flash BOOT_%1$s)</string>
     <string name="status_slot_unknown">Active slot unknown (firmware does not expose ro.boot.slot_suffix)</string>
-    <string name="warn_slot_mismatch">WARNING: the picked image is slot %1$s but the active slot is %2$s. Flashing it will not give root.</string>
+    <string name="warn_slot_mismatch">Warning! Image is slot %1$s but the active slot is %2$s. Do not flash it: root will not work. Choose BOOT_%2$s.</string>
 </resources>

@@ -185,7 +185,7 @@ You do not need to open Magisk or patch through it: RootMate uses the binaries f
 
 You must flash the image of the slot **the TV is booting from right now**. If you patch and write the wrong slot, the TV keeps booting the stock boot and you get no root.
 
-Easiest way: open RootMate; the line **Active boot slot: A** (or B) is shown above the patch buttons. If you pick a file named for the other slot, the app warns you in the log.
+Easiest way: open RootMate; the line **Active boot slot: A** (or B) is shown above the patch buttons. If you pick a file named for the other slot, a large amber warning appears at the end of the log after patching.
 
 You can check the same over adb (enable USB/network debugging in developer settings):
 

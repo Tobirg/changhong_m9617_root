@@ -113,12 +113,10 @@ class MainActivity : AppCompatActivity() {
         when (pendingPickTarget) {
             "manual" -> {
                 appendLog(getString(R.string.picked_file, path))
-                warnIfSlotMismatch(path)
                 runBusy { patch(File(path)) }
             }
             "full" -> {
                 appendLog(getString(R.string.picked_original, path))
-                warnIfSlotMismatch(path)
                 runBusy { fullPatch(path) }
             }
         }
@@ -263,14 +261,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Warns when the picked file is named for the other slot than the active one. */
-    private fun warnIfSlotMismatch(path: String) {
-        val slot = activeSlotSuffix()?.substring(1)?.uppercase() ?: return
-        val picked = Regex("BOOT_([AB])", RegexOption.IGNORE_CASE).find(File(path).name)
-            ?.groupValues?.get(1)?.uppercase() ?: return
-        if (picked != slot) appendLog(getString(R.string.warn_slot_mismatch, picked, slot))
-    }
-
     /** Runs [action] only if Magisk is installed; otherwise tells the user to install it. */
     private fun withMagisk(action: () -> Unit) {
         if (isMagiskInstalled()) action()
@@ -375,7 +365,7 @@ class MainActivity : AppCompatActivity() {
         openFactoryPage(4, "Design Mode -> Uart -> On")
     }
 
-    private val logBuf = StringBuilder()
+    private val logBuf = android.text.SpannableStringBuilder()
 
     private fun appendLog(msg: String) {
         logBuf.append(msg).append("\n\n")
@@ -386,7 +376,7 @@ class MainActivity : AppCompatActivity() {
     /** Shows a transient last line (download progress) that the next real log entry replaces. */
     private fun showProgress(msg: String) {
         runOnUiThread {
-            log.text = logBuf.toString() + msg
+            log.text = android.text.SpannableStringBuilder(logBuf).append(msg)
             scrollLogToEnd()
         }
     }
@@ -394,6 +384,32 @@ class MainActivity : AppCompatActivity() {
     // scrollTo (not fullScroll) so the log never takes focus away from the buttons
     private fun scrollLogToEnd() {
         logScroll.post { logScroll.scrollTo(0, log.bottom) }
+    }
+
+    /** Big, bold, amber block at the end of the log: cannot be missed. */
+    private fun appendWarning(msg: String) {
+        val bar = "!".repeat(24)
+        val start = logBuf.length
+        logBuf.append(bar).append("
+").append(msg.uppercase()).append("
+").append(bar)
+        val end = logBuf.length
+        logBuf.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, 0)
+        logBuf.setSpan(android.text.style.ForegroundColorSpan(resources.getColor(R.color.warning, theme)), start, end, 0)
+        logBuf.setSpan(android.text.style.RelativeSizeSpan(1.25f), start, end, 0)
+        logBuf.append("
+
+")
+        log.text = logBuf
+        scrollLogToEnd()
+    }
+
+    /** After a patch: warns (last in the log) if the image is named for the other slot than the active one. */
+    private fun logSlotMismatch(file: File) {
+        val slot = activeSlotSuffix()?.substring(1)?.uppercase() ?: return
+        val picked = Regex("BOOT_([AB])", RegexOption.IGNORE_CASE).find(file.name)
+            ?.groupValues?.get(1)?.uppercase() ?: return
+        if (picked != slot) runOnUiThread { appendWarning(getString(R.string.warn_slot_mismatch, picked, slot)) }
     }
 
     private fun log(msg: String) {
@@ -681,6 +697,7 @@ class MainActivity : AppCompatActivity() {
         step(95, getString(R.string.step_saving))
         saveAtomically(outputFile, dest)
         log(getString(R.string.done_saved, dest.absolutePath))
+        logSlotMismatch(inputFile)
     }
 
     /**
@@ -854,5 +871,6 @@ class MainActivity : AppCompatActivity() {
         step(95, getString(R.string.step_saving))
         saveAtomically(finalOutput, dest)
         log(getString(R.string.done_saved, dest.absolutePath))
+        logSlotMismatch(inputFile)
     }
 }
