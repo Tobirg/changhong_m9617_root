@@ -184,7 +184,9 @@ It takes about a minute, the buttons are locked meanwhile. Do not leave the app.
    ~~~
    `flash.txt` repeats the checks, unlocks the bootloader (`devicestate unlock`), writes the image to the boot partition of the active slot, reads it back and compares, prints `FLASH_OK_slot_…` and reboots the TV. Any failed check stops the script before the write.
 
-**If the TV is not unlocked yet** (the boot state is not `orange`), `flash.txt` **wipes user data** before the reboot: without it the TV does not boot because of the encryption keys. After the wipe set the TV up again, developer options and debugging included; RootMate and Magisk are gone with the data. Install Magisk again: the APK from the drive, or RootMate (install it again from the drive) → **Download and install Magisk**. **Right after installing press "Open"**: there is no icon in the stock launcher (later it can be opened from Android settings). Agree to the additional setup when asked.
+> ⚠️ **Data wipe.** If the TV is not unlocked yet (the boot state is not `orange`), `flash.txt` **deletes all user data** before the reboot: without it the TV does not boot because of the encryption keys. Save everything you need beforehand.
+
+After the wipe set the TV up again, developer options and debugging included; RootMate and Magisk are gone with the data. Install Magisk again: the APK from the drive, or RootMate (install it again from the drive) → **Download and install Magisk**. **Right after installing press "Open"**: there is no icon in the stock launcher (later it can be opened from Android settings). Agree to the additional setup when asked.
 
 If the TV was already unlocked, there is no wipe, and the app shows "Flashing finished (FLASH.OK)".
 
