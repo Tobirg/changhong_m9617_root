@@ -230,6 +230,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** Active A/B boot slot suffix ("_a" / "_b") or null if the firmware does not expose it. */
+    private fun activeSlotSuffix(): String? {
+        val v = try {
+            Class.forName("android.os.SystemProperties")
+                .getMethod("get", String::class.java, String::class.java)
+                .invoke(null, "ro.boot.slot_suffix", "") as? String
+        } catch (e: Exception) {
+            null
+        } ?: try {
+            ProcessBuilder("/system/bin/getprop", "ro.boot.slot_suffix").redirectErrorStream(true).start()
+                .inputStream.bufferedReader().readText()
+        } catch (e: Exception) {
+            null
+        }
+        return v?.trim()?.lowercase()?.takeIf { it == "_a" || it == "_b" }
+    }
+
+    /** Shows which boot slot the TV is running from: that is the image that must be patched and flashed. */
+    private fun updateSlotStatus() {
+        val tv = findViewById<TextView>(R.id.slotStatus)
+        val slot = activeSlotSuffix()
+        if (slot == null) {
+            tv.text = getString(R.string.status_slot_unknown)
+            tv.setTextColor(resources.getColor(R.color.warning, theme))
+        } else {
+            tv.text = getString(R.string.status_slot, slot.substring(1).uppercase())
+            tv.setTextColor(resources.getColor(R.color.accent, theme))
+        }
+    }
+
+    /** Warns when the picked file is named for the other slot than the active one. */
+    private fun warnIfSlotMismatch(path: String) {
+        val slot = activeSlotSuffix()?.substring(1)?.uppercase() ?: return
+        val picked = Regex("BOOT_([AB])", RegexOption.IGNORE_CASE).find(File(path).name)
+            ?.groupValues?.get(1)?.uppercase() ?: return
+        if (picked != slot) appendLog(getString(R.string.warn_slot_mismatch, picked, slot))
+    }
+
     /** Runs [action] only if Magisk is installed; otherwise tells the user to install it. */
     private fun withMagisk(action: () -> Unit) {
         if (isMagiskInstalled()) action()

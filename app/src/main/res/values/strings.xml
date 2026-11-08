@@ -115,4 +115,7 @@
     <string name="info_final_size">Итоговый образ: %1$d байт (исходный: %2$d байт)</string>
     <string name="factory_hint_suffix"> Дальше вручную: %1$s</string>
     <string name="dl_progress_unknown">Скачано: %1$d МБ</string>
+    <string name="status_slot">Активный слот загрузки: %1$s (патчите и прошивайте BOOT_%1$s)</string>
+    <string name="status_slot_unknown">Активный слот не определён (прошивка не отдаёт ro.boot.slot_suffix)</string>
+    <string name="warn_slot_mismatch">ВНИМАНИЕ: выбран образ слота %1$s, а активный слот %2$s. Если прошить его, root не заработает.</string>
 </resources>

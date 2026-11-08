@@ -130,6 +130,11 @@
                 android:background="@color/surface_alt" />
 
             <TextView style="@style/SectionLabel" android:text="@string/section_patch" />
+            
+            <TextView
+                android:id="@+id/slotStatus"
+                style="@style/PermissionCaption"
+                android:layout_marginBottom="6dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"

@@ -35,7 +35,7 @@ If the terminal shows nothing, UART may be switched off in the TV. In RootMate p
 
 On a PC, format the drive as **FAT32**, a single partition. Download and copy to it:
 
-- **RootMate-1.0.apk**: [latest release](https://github.com/Tobirg/changhong_m9617_root/releases/latest). The app downloads and installs Magisk by itself (the TV needs internet).
+- **RootMate-1.1.apk**: [latest release](https://github.com/Tobirg/changhong_m9617_root/releases/latest). The app downloads and installs Magisk by itself (the TV needs internet).
 - Optionally the [Magisk APK](https://github.com/topjohnwu/Magisk/releases/latest): needed after the data wipe if the TV has no internet.
 
 If the drive was used before, delete old `*_magisk_patched*.img` files so you do not mix them up.
@@ -83,7 +83,7 @@ fatls usb 0:1
 Expected:
 ~~~text
             system volume information/
-  7734485   RootMate-1.0.apk
+  7734485   RootMate-1.1.apk
 
 1 file(s), 1 dir(s)
 ~~~
@@ -138,7 +138,7 @@ Expected:
             system volume information/
  32505856   boot_a.img
  32505856   boot_b.img
-  7734485   RootMate-1.0.apk
+  7734485   RootMate-1.1.apk
 
 3 file(s), 1 dir(s)
 ~~~
@@ -163,7 +163,7 @@ reset
 
 ## 5. Install RootMate and Magisk
 
-After boot, open the stock file manager on the TV and install **RootMate-1.0.apk** from the drive (allow installs from unknown sources). If the stock manager cannot open APKs, use `adb install`.  
+After boot, open the stock file manager on the TV and install **RootMate-1.1.apk** from the drive (allow installs from unknown sources). If the stock manager cannot open APKs, use `adb install`.  
 <img width="332" height="276" alt="image" src="https://github.com/user-attachments/assets/6d52afa9-80ed-493b-a0e8-b74b397f525e" />
 
 Open RootMate from the TV's app list. On first launch it shows a permissions screen: grant **All files access** and **Install unknown apps**, then press **Done**.
@@ -185,7 +185,9 @@ You do not need to open Magisk or patch through it: RootMate uses the binaries f
 
 You must flash the image of the slot **the TV is booting from right now**. If you patch and write the wrong slot, the TV keeps booting the stock boot and you get no root.
 
-Connect to the TV over adb (enable USB/network debugging in developer settings) and run:
+Easiest way: open RootMate; the line **Active boot slot: A** (or B) is shown above the patch buttons. If you pick a file named for the other slot, the app warns you in the log.
+
+You can check the same over adb (enable USB/network debugging in developer settings):
 
 ~~~bash
 adb shell getprop ro.boot.slot_suffix
@@ -291,7 +293,7 @@ Reboot
 reset
 ~~~
 
-After the reset RootMate is gone with the data. Install Magisk again: either the APK from the drive, or **RootMate-1.0.apk** → **Download and install Magisk**.  
+After the reset RootMate is gone with the data. Install Magisk again: either the APK from the drive, or **RootMate-1.1.apk** → **Download and install Magisk**.  
 **After installing, press Open immediately: there is no icon in the stock launcher. You can reopen it later from Android settings.**  
 When asked for additional setup, agree.
 
