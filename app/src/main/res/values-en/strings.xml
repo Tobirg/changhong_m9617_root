@@ -227,11 +227,12 @@
     <string name="led_cancel">Cancel</string>
     <string name="led_sleep_title">In standby</string>
     <string name="led_on_title">While on</string>
-    <string name="led_mode_stock">Stock</string>
     <string name="led_mode_off">Off</string>
     <string name="led_mode_on">On</string>
     <string name="led_mode_blink">Blink</string>
     <string name="led_level">Brightness: %1$d %%</string>
-    <string name="led_on_note">After the screen turns on, the firmware shows its own LED state for a fraction of a second, then ledctl restores the chosen one. Brightness applies to the "On" mode only.</string>
+    <string name="led_speed">Speed: ×%1$s</string>
+    <string name="led_sleep_blink_note">In standby the LED blinks at full brightness: while the CPU sleeps the PWM blinks on its own, and it cannot be dim and blink at the same time.</string>
+    <string name="led_on_note">\"Off\" is the firmware\'s own state. After the screen turns on, the firmware shows its own LED state for a fraction of a second, then the module restores the chosen one.</string>
     <string name="led_set_failed">Could not apply the setting</string>
 </resources>

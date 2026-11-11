@@ -227,11 +227,12 @@
     <string name="led_cancel">Отмена</string>
     <string name="led_sleep_title">В режиме сна</string>
     <string name="led_on_title">В работе</string>
-    <string name="led_mode_stock">Как в прошивке</string>
     <string name="led_mode_off">Не горит</string>
     <string name="led_mode_on">Горит</string>
     <string name="led_mode_blink">Мигает</string>
     <string name="led_level">Яркость: %1$d %%</string>
-    <string name="led_on_note">После включения экрана прошивка на долю секунды показывает свой режим, затем ledctl возвращает выбранный. Яркость настраивается только в режиме «Горит».</string>
+    <string name="led_speed">Скорость: ×%1$s</string>
+    <string name="led_sleep_blink_note">Во сне индикатор мигает на полной яркости: пока процессор спит, мигание делает сам ШИМ, а тусклое свечение и мигание ему одновременно недоступны.</string>
+    <string name="led_on_note">«Не горит» — состояние из прошивки. После включения экрана прошивка на долю секунды показывает свой режим, затем модуль возвращает выбранный.</string>
     <string name="led_set_failed">Не удалось применить настройку</string>
 </resources>

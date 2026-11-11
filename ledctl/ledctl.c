@@ -12,10 +12,18 @@
 // Parameters (all in /sys/module/ledctl/parameters/, writable at runtime as root):
 //   sleep_led   0 = dark in standby, 1 = lit (stock), 2 = blink          [default 0]
 //   sleep_level 1..100 brightness when lit in standby (100 = stock full)  [default 100]
-//   on_led     -1 = stock (the TV software decides), 0 = dark, 1 = lit, 2 = blink, while the TV is on [default -1].
-//              The TV service (mik.ko mi_pm_SetLedControl) reprograms the LED ~1 s after every screen-on, so
-//              the Magisk service.sh re-applies this after each "screen_toggled: 1" event (write the same value).
-//   on_level    1..100 brightness while on                                [default 100]
+//   sleep_speed 50..400 blink rate in % of the stock rate (100 = about 1 blink/s) [default 100].
+//               Standby blinking is done by the PWM itself while the CPU sleeps: one slow PWM, so it is
+//               always full brightness (a dim LED needs a fast PWM, which cannot blink).
+//   on_led     -1 = stock (the TV software keeps it dark), 0 = dark, 1 = lit, 2 = blink, while the TV is on
+//               [default -1]. Applied only while the screen is on (see screen_on); the driver's resume values
+//               are left alone, so background wake-ups with the screen off stay dark.
+//   on_level    1..100 brightness while on, for lit and blink             [default 100]
+//   on_speed    50..400 blink rate while on, % of the stock rate          [default 100]. Blinking while on is
+//               done in software (kernel thread ledctl_blink), so it can also be dim.
+//   screen_on   written by watch.sh: 1 after each "screen_toggled: 1" (the TV service, mik.ko
+//               mi_pm_SetLedControl, reprograms the LED ~1 s after screen-on, so it is written a few times),
+//               0 after "screen_toggled: 0" (stops the "while on" mode and hands the LED back) [default 1]
 //   pwm         debug: write "period duty div polarity" (hex or dec) to program the PWM right now
 //   info        read-only: what was found, current values, or why the module refused
 //   probe_only  1 at insmod: run every check, write nothing, print "probe ok" and fail with ECANCELED
@@ -28,6 +36,8 @@
 #include <linux/notifier.h>
 #include <linux/suspend.h>
 #include <linux/moduleparam.h>
+#include <linux/mutex.h>
+#include <linux/err.h>
 
 enum { F_DIV, F_PERIOD, F_DUTY, F_POL, F_N };
 static const char *const fsym[F_N] = { "MDrv_PM_PWM_Div_Ex", "MDrv_PM_PWM_Period_Ex",
@@ -45,9 +55,24 @@ typedef int (*size_off_t)(unsigned long addr, unsigned long *size, unsigned long
 typedef struct backlight_device *(*get_by_type_t)(enum backlight_type);
 typedef int (*pm_notifier_reg_t)(struct notifier_block *);
 typedef void (*pwm_fn_t)(u32 ch, u32 v);
+typedef struct task_struct *(*kthread_create_t)(int (*fn)(void *), void *data, int node, const char namefmt[], ...);
+typedef int (*task_fn_t)(struct task_struct *);
+typedef bool (*should_stop_t)(void);
+typedef unsigned long (*msleep_t)(unsigned int ms);
+typedef void (*mutex_fn_t)(struct mutex *);
 
 static probe_read_t safe_read;
 static pwm_fn_t pwm_set[F_N], pwm_enable, pwm_dben;
+static kthread_create_t k_create;
+static task_fn_t k_stop, k_wake;
+static should_stop_t k_should_stop;
+static msleep_t k_msleep;
+static mutex_fn_t k_mutex_lock, k_mutex_unlock;
+
+/* serialises parameter writes, the PM notifier and unload (the blink thread never takes it) */
+static DEFINE_MUTEX(led_lock);
+static void lock(void)   { if (k_mutex_lock) k_mutex_lock(&led_lock); }
+static void unlock(void) { if (k_mutex_unlock) k_mutex_unlock(&led_lock); }
 
 static u8 *priv;                 /* driver private struct, valid only after a successful init */
 static struct fn_layout sus, res;
@@ -55,8 +80,10 @@ static struct pwm_vals orig_sus, orig_res;
 static u32 chan;
 static char status[400] = "not initialised";
 
-static int sleep_led, sleep_level = 100, on_led = -1, on_level = 100, probe_only;
+static int sleep_led, sleep_level = 100, sleep_speed = 100;
+static int on_led = -1, on_level = 100, on_speed = 100, screen_on = 1, probe_only;
 static bool on_touched;
+static struct task_struct *blink_task;
 
 /* ---------------- AArch64 decoding ---------------- */
 static bool dec_bl(u32 w, unsigned long pc, unsigned long *tgt)
@@ -196,10 +223,11 @@ static void pwm_program(const struct pwm_vals *p)  /* same order as the driver *
 	pwm_enable(chan, 1);
 }
 
-/* Values for a mode, derived from the driver's own resume (dark) settings. Measured on the Changhong
- * M9617 (2026-11-11): stock div 0xff makes the PWM slow (~1 Hz), so half duty blinks; div 0 makes it fast
- * enough to look steady, and then brightness follows duty/period with the "lit" polarity. */
-static void mode_vals(int mode, int level, struct pwm_vals *p)
+/* Values for a mode, derived from the driver's own resume (dark) settings. Measured on the Tuvio
+ * TO55UFGCV5 (2026-11-11): stock div 0xff makes the PWM slow (~1 Hz), so half duty blinks; div 0 makes it
+ * fast enough to look steady, and then brightness follows duty/period with the "lit" polarity.
+ * Hardware blink (mode 2) keeps the slow divider; speed scales the period (u16, so at most ~1.4x slower). */
+static void mode_vals(int mode, int level, int speed, struct pwm_vals *p)
 {
 	u32 dark = orig_res.v[F_POL] & 1, per = orig_res.v[F_PERIOD];
 
@@ -208,8 +236,10 @@ static void mode_vals(int mode, int level, struct pwm_vals *p)
 		return;
 	p->v[F_POL] = !dark;
 	p->v[F_DUTY] = per;
-	if (mode == 2) {                 /* blink: stock (slow) divider, half duty */
-		p->v[F_DUTY] = per / 2;
+	if (mode == 2) {
+		u32 bper = clamp_t(u32, per * 100 / (u32)max(speed, 1), 0x100, 0xffff);
+		p->v[F_PERIOD] = bper;
+		p->v[F_DUTY] = bper / 2;
 		return;
 	}
 	if (level >= 100)
@@ -218,32 +248,77 @@ static void mode_vals(int mode, int level, struct pwm_vals *p)
 	p->v[F_DUTY] = max(1u, per * (u32)level / 100);
 }
 
-static void apply_sleep(void)
+static void apply_sleep(void)        /* led_lock held */
 {
 	struct pwm_vals p;
 	if (!priv)
 		return;
-	mode_vals(sleep_led, sleep_level, &p);
+	mode_vals(sleep_led, sleep_level, sleep_speed, &p);
 	write_set(&sus, &p);
 }
 
-static void apply_on(void)
+/* Software blink while the TV is on: lit at on_level, then dark, each for half a period (500 ms at 100 %).
+ * Takes no lock: it only reads the settings, and it is stopped (and waited for) before anyone else programs. */
+static int blink_fn(void *unused)
+{
+	bool lit = true;
+	int left;
+
+	while (!k_should_stop()) {
+		struct pwm_vals p;
+		if (lit)
+			mode_vals(1, on_level, 100, &p);
+		else
+			p = orig_res;
+		pwm_program(&p);
+		lit = !lit;
+		for (left = 50000 / max(on_speed, 1); left > 0 && !k_should_stop(); left -= 50)
+			k_msleep(min(left, 50));
+	}
+	return 0;
+}
+
+static void start_blink(void)        /* led_lock held */
+{
+	struct task_struct *t;
+	if (blink_task)
+		return;
+	t = k_create(blink_fn, NULL, -1, "ledctl_blink");
+	if (IS_ERR_OR_NULL(t))
+		return;
+	blink_task = t;
+	k_wake(t);
+}
+
+static void stop_blink(void)         /* led_lock held */
+{
+	if (blink_task) {
+		k_stop(blink_task);
+		blink_task = NULL;
+	}
+}
+
+static void apply_on(void)           /* led_lock held */
 {
 	struct pwm_vals p;
 	if (!priv)
 		return;
-	if (on_led < 0) {            /* back to stock: the driver's own values, normal (dark) state now */
+	if (on_led != 2 || !screen_on)
+		stop_blink();
+	if (on_led < 0 || !screen_on) {  /* stock, or screen off: hand the LED back in its normal (dark) state */
 		if (on_touched) {
-			write_set(&res, &orig_res);
 			pwm_program(&orig_res);
 			on_touched = false;
 		}
 		return;
 	}
-	mode_vals(on_led, on_level, &p);
-	write_set(&res, &p);         /* re-applied by the driver after every resume */
-	pwm_program(&p);             /* and right now */
 	on_touched = true;
+	if (on_led == 2) {
+		start_blink();
+		return;
+	}
+	mode_vals(on_led, on_level, 100, &p);
+	pwm_program(&p);
 }
 
 static void make_status(void)
@@ -283,7 +358,7 @@ static int get_int(char *buf, const struct kernel_param *kp)
 	static int set_##name(const char *val, const struct kernel_param *kp)            \
 	{                                                                                \
 		int ret = parse_int(val, lo, hi, &name);                                     \
-		if (!ret) { after; }                                                         \
+		if (!ret) { lock(); after; unlock(); }                                       \
 		return ret;                                                                  \
 	}                                                                                \
 	static const struct kernel_param_ops ops_##name = { .set = set_##name, .get = get_int }; \
@@ -291,8 +366,11 @@ static int get_int(char *buf, const struct kernel_param *kp)
 
 INT_PARAM(sleep_led, 0, 2, apply_sleep());
 INT_PARAM(sleep_level, 1, 100, apply_sleep());
+INT_PARAM(sleep_speed, 50, 400, apply_sleep());
 INT_PARAM(on_led, -1, 2, apply_on());
 INT_PARAM(on_level, 1, 100, apply_on());
+INT_PARAM(on_speed, 50, 400, apply_on());
+INT_PARAM(screen_on, 0, 1, apply_on());
 INT_PARAM(probe_only, 0, 1, (void)0);
 
 static int set_pwm(const char *val, const struct kernel_param *kp)
@@ -319,8 +397,11 @@ static int set_pwm(const char *val, const struct kernel_param *kp)
 	}
 	if (p.v[F_PERIOD] > 0xffff || p.v[F_DUTY] > 0xffff || p.v[F_DIV] > 0xffff || p.v[F_POL] > 1)
 		return -ERANGE;
+	lock();
+	stop_blink();
 	pwm_program(&p);
 	on_touched = true;
+	unlock();
 	pr_info("ledctl: pwm period=%#x duty=%#x div=%#x pol=%u\n", p.v[F_PERIOD], p.v[F_DUTY], p.v[F_DIV], p.v[F_POL]);
 	return 0;
 }
@@ -340,8 +421,12 @@ module_param_cb(info, &ops_info, NULL, 0444);
 /* ---------------- suspend hook ---------------- */
 static int ledctl_pm(struct notifier_block *nb, unsigned long ev, void *unused)
 {
-	if (ev == PM_SUSPEND_PREPARE || ev == PM_HIBERNATION_PREPARE)
+	if (ev == PM_SUSPEND_PREPARE || ev == PM_HIBERNATION_PREPARE) {
+		lock();
+		stop_blink();        /* nothing may reprogram the LED after the driver's suspend callback */
 		apply_sleep();
+		unlock();
+	}
 	return NOTIFY_DONE;
 }
 static struct notifier_block ledctl_nb = { .notifier_call = ledctl_pm };
@@ -368,8 +453,16 @@ static int __init ledctl_init(void)
 	safe_read = (probe_read_t)kallsyms_lookup_name("probe_kernel_read");
 	pwm_enable = (pwm_fn_t)kallsyms_lookup_name("MDrv_PM_PWM_Enable_Ex");
 	pwm_dben = (pwm_fn_t)kallsyms_lookup_name("MDrv_PM_PWM_Dben_Ex");
+	k_create = (kthread_create_t)kallsyms_lookup_name("kthread_create_on_node");
+	k_stop = (task_fn_t)kallsyms_lookup_name("kthread_stop");
+	k_wake = (task_fn_t)kallsyms_lookup_name("wake_up_process");
+	k_should_stop = (should_stop_t)kallsyms_lookup_name("kthread_should_stop");
+	k_msleep = (msleep_t)kallsyms_lookup_name("msleep_interruptible");
 	if (!safe_read || !get_by_type || !reg || !upd || !pwm_enable || !pwm_dben)
 		return fail(-ENOENT, "kernel symbols not found (not a pwm_backlight/MStar PM PWM kernel)");
+	if (!k_create || !k_stop || !k_wake || !k_should_stop || !k_msleep ||
+	    !kallsyms_lookup_name("mutex_lock") || !kallsyms_lookup_name("mutex_unlock"))
+		return fail(-ENOENT, "kthread/mutex symbols not found");
 	for (j = 0; j < F_N; j++) {
 		tgt[j] = kallsyms_lookup_name(fsym[j]);
 		pwm_set[j] = (pwm_fn_t)tgt[j];
@@ -423,12 +516,16 @@ static int __init ledctl_init(void)
 		return -ECANCELED;
 	}
 
+	k_mutex_lock = (mutex_fn_t)kallsyms_lookup_name("mutex_lock");
+	k_mutex_unlock = (mutex_fn_t)kallsyms_lookup_name("mutex_unlock");
 	priv = p;
 	ret = reg(&ledctl_nb);
 	if (ret)
 		return fail(ret, "register_pm_notifier failed");
+	lock();
 	apply_sleep();
 	apply_on();
+	unlock();
 	make_status();
 	pr_info("ledctl: %s", status);
 	return 0;
@@ -439,6 +536,8 @@ static void __exit ledctl_exit(void)
 	pm_notifier_reg_t unreg = (pm_notifier_reg_t)kallsyms_lookup_name("unregister_pm_notifier");
 	if (unreg)
 		unreg(&ledctl_nb);
+	lock();
+	stop_blink();
 	if (priv) {
 		write_set(&sus, &orig_sus);
 		write_set(&res, &orig_res);
@@ -446,6 +545,7 @@ static void __exit ledctl_exit(void)
 			pwm_program(&orig_res);
 		pr_info("ledctl: unloaded, driver values restored\n");
 	}
+	unlock();
 }
 
 module_init(ledctl_init);

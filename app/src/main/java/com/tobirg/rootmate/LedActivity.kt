@@ -8,12 +8,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
+import java.text.NumberFormat
 import java.util.concurrent.Executors
 
 /**
  * Power LED settings on top of the ledctl kernel module (Led.kt): install/update/remove the module, the LED mode in
- * standby and while the TV is on, brightness for the "on" modes. Every change is applied at once and kept for the
- * next boots. Root work runs on one background thread, in order.
+ * standby and while on, brightness and blink speed. Every change is applied at once and kept for the next boots, so
+ * there is no "Done" button (Back closes the screen). Root work runs on one background thread, in order.
  */
 class LedActivity : AppCompatActivity() {
 
@@ -24,21 +25,24 @@ class LedActivity : AppCompatActivity() {
     private lateinit var removeBtn: MaterialButton
     private lateinit var sleepGroup: MaterialButtonToggleGroup
     private lateinit var onGroup: MaterialButtonToggleGroup
-    private lateinit var sleepLevel: TextView
-    private lateinit var onLevel: TextView
-    private lateinit var sleepLevelRow: View
-    private lateinit var onLevelRow: View
 
-    /** button id -> module value */
+    /** button id -> module value. While on, "Off" is the firmware's own state (on_led -1, the firmware keeps it dark). */
     private val sleepModes = mapOf(R.id.ledSleepOff to 0, R.id.ledSleepOn to 1, R.id.ledSleepBlink to 2)
-    private val onModes = mapOf(R.id.ledOnStock to -1, R.id.ledOnOff to 0, R.id.ledOnOn to 1, R.id.ledOnBlink to 2)
+    private val onModes = mapOf(R.id.ledOnOff to -1, R.id.ledOnOn to 1, R.id.ledOnBlink to 2)
     private val levels = listOf(5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+    /** blink rate in % of the stock rate (100 = about one blink per second) */
+    private val speeds = listOf(75, 100, 150, 200, 300, 400)
 
     private var state: Led.State? = null
     private val values = Led.DEFAULTS.toMutableMap()
     private var lastInstallError: String? = null
     /** true while the groups are being set from the module state, so their listeners do not write it back */
     private var updating = false
+
+    private val stepperIds = listOf(
+        R.id.ledSleepMinus, R.id.ledSleepPlus, R.id.ledSleepSpeedMinus, R.id.ledSleepSpeedPlus,
+        R.id.ledOnMinus, R.id.ledOnPlus, R.id.ledOnSpeedMinus, R.id.ledOnSpeedPlus,
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,24 +53,20 @@ class LedActivity : AppCompatActivity() {
         removeBtn = findViewById(R.id.ledRemove)
         sleepGroup = findViewById(R.id.ledSleepGroup)
         onGroup = findViewById(R.id.ledOnGroup)
-        sleepLevel = findViewById(R.id.ledSleepLevel)
-        onLevel = findViewById(R.id.ledOnLevel)
-        sleepLevelRow = findViewById(R.id.ledSleepLevelRow)
-        onLevelRow = findViewById(R.id.ledOnLevelRow)
 
         installBtn.setOnClickListener { install() }
         removeBtn.setOnClickListener { confirmRemove() }
-        findViewById<View>(R.id.ledDone).setOnClickListener { finish() }
 
         bindGroup(sleepGroup, sleepModes, "sleep_led")
         bindGroup(onGroup, onModes, "on_led")
-        bindStepper(R.id.ledSleepMinus, R.id.ledSleepPlus, "sleep_level")
-        bindStepper(R.id.ledOnMinus, R.id.ledOnPlus, "on_level")
+        bindStepper(R.id.ledSleepMinus, R.id.ledSleepPlus, "sleep_level", levels)
+        bindStepper(R.id.ledSleepSpeedMinus, R.id.ledSleepSpeedPlus, "sleep_speed", speeds)
+        bindStepper(R.id.ledOnMinus, R.id.ledOnPlus, "on_level", levels)
+        bindStepper(R.id.ledOnSpeedMinus, R.id.ledOnSpeedPlus, "on_speed", speeds)
 
-        listOf(R.id.ledInstall, R.id.ledRemove, R.id.ledDone, R.id.ledSleepMinus, R.id.ledSleepPlus,
-            R.id.ledOnMinus, R.id.ledOnPlus).forEach { TvFocus.apply(findViewById(it), 10f) }
+        (listOf(R.id.ledInstall, R.id.ledRemove) + stepperIds).forEach { TvFocus.apply(findViewById(it), 10f) }
         focusSegments(listOf(R.id.ledSleepOff, R.id.ledSleepOn, R.id.ledSleepBlink))
-        focusSegments(listOf(R.id.ledOnStock, R.id.ledOnOff, R.id.ledOnOn, R.id.ledOnBlink))
+        focusSegments(listOf(R.id.ledOnOff, R.id.ledOnOn, R.id.ledOnBlink))
 
         setControlsEnabled(false)
     }
@@ -95,19 +95,19 @@ class LedActivity : AppCompatActivity() {
             if (!isChecked || updating) return@addOnButtonCheckedListener
             val v = modes[checkedId] ?: return@addOnButtonCheckedListener
             values[key] = v
-            showLevels()
+            showRows()
             apply(key, v)
         }
     }
 
-    private fun bindStepper(minusId: Int, plusId: Int, key: String) {
+    private fun bindStepper(minusId: Int, plusId: Int, key: String, steps: List<Int>) {
         fun step(dir: Int) {
             val cur = values.getValue(key)
-            val next = if (dir > 0) levels.firstOrNull { it > cur } ?: levels.last()
-            else levels.lastOrNull { it < cur } ?: levels.first()
+            val next = if (dir > 0) steps.firstOrNull { it > cur } ?: steps.last()
+            else steps.lastOrNull { it < cur } ?: steps.first()
             if (next == cur) return
             values[key] = next
-            showLevels()
+            showRows()
             apply(key, next)
         }
         findViewById<View>(minusId).setOnClickListener { step(-1) }
@@ -161,24 +161,45 @@ class LedActivity : AppCompatActivity() {
         setControlsEnabled(true)
         updating = true
         sleepModes.entries.firstOrNull { it.value == values["sleep_led"] }?.let { sleepGroup.check(it.key) }
-        onModes.entries.firstOrNull { it.value == values["on_led"] }?.let { onGroup.check(it.key) }
+        // on_led 0 (forced dark, set by older builds) looks the same as the firmware's dark state
+        val on = values.getValue("on_led").let { if (it == 0) -1 else it }
+        onModes.entries.firstOrNull { it.value == on }?.let { onGroup.check(it.key) }
         updating = false
-        showLevels()
+        showRows()
         setControlsEnabled(s.root && s.installed && s.loaded)
     }
 
-    /** Brightness only means something for "on": blink keeps the stock (slow) PWM, off and stock ignore it. */
-    private fun showLevels() {
-        sleepLevel.text = getString(R.string.led_level, values.getValue("sleep_level"))
-        onLevel.text = getString(R.string.led_level, values.getValue("on_level"))
-        sleepLevelRow.visibility = if (values["sleep_led"] == 1) View.VISIBLE else View.GONE
-        onLevelRow.visibility = if (values["on_led"] == 1) View.VISIBLE else View.GONE
+    /**
+     * Brightness for "On" in both sections and for "Blink" while on (software blink); speed for "Blink" in both.
+     * Blinking in standby is done by the PWM alone while the CPU sleeps, so it is always full brightness (note).
+     */
+    private fun showRows() {
+        val sleep = values.getValue("sleep_led")
+        val on = values.getValue("on_led")
+        text(R.id.ledSleepLevel, getString(R.string.led_level, values.getValue("sleep_level")))
+        text(R.id.ledOnLevel, getString(R.string.led_level, values.getValue("on_level")))
+        text(R.id.ledSleepSpeed, getString(R.string.led_speed, speedText(values.getValue("sleep_speed"))))
+        text(R.id.ledOnSpeed, getString(R.string.led_speed, speedText(values.getValue("on_speed"))))
+        visible(R.id.ledSleepLevelRow, sleep == 1)
+        visible(R.id.ledSleepSpeedRow, sleep == 2)
+        visible(R.id.ledSleepBlinkNote, sleep == 2)
+        visible(R.id.ledOnLevelRow, on == 1 || on == 2)
+        visible(R.id.ledOnSpeedRow, on == 2)
+    }
+
+    /** 150 -> "1,5" (ru) / "1.5" (en): the rate relative to the stock blink */
+    private fun speedText(percent: Int): String =
+        NumberFormat.getNumberInstance(resources.configuration.locales[0]).apply { maximumFractionDigits = 2 }
+            .format(percent / 100.0)
+
+    private fun text(id: Int, value: String) { findViewById<TextView>(id).text = value }
+
+    private fun visible(id: Int, show: Boolean) {
+        findViewById<View>(id).visibility = if (show) View.VISIBLE else View.GONE
     }
 
     private fun setControlsEnabled(enabled: Boolean) {
-        val ids = sleepModes.keys + onModes.keys +
-            listOf(R.id.ledSleepMinus, R.id.ledSleepPlus, R.id.ledOnMinus, R.id.ledOnPlus)
-        ids.forEach { findViewById<View>(it).isEnabled = enabled }
+        (sleepModes.keys + onModes.keys + stepperIds).forEach { findViewById<View>(it).isEnabled = enabled }
         sleepGroup.alpha = if (enabled) 1f else 0.5f
         onGroup.alpha = if (enabled) 1f else 0.5f
     }
