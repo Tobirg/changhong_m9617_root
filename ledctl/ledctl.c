@@ -23,7 +23,20 @@
 //               done in software (kernel thread ledctl_blink), so it can also be dim.
 //   screen_on   written by watch.sh: 1 after each "screen_toggled: 1" (the TV service, mik.ko
 //               mi_pm_SetLedControl, reprograms the LED ~1 s after screen-on, so it is written a few times),
-//               0 after "screen_toggled: 0" (stops the "while on" mode and hands the LED back) [default 1]
+//               0 after "screen_toggled: 0": from then on the LED shows the standby mode, also while the
+//               system is still awake with the screen off [default 1]
+//
+// Screen off but CPU awake. After power-off the TV stays awake for seconds (minutes while the OLED panel runs
+// its Off-RS compensation), and wakes up on its own now and then (Doze, network). In that time mik.ko drives
+// the LED from its own table (board ini "BOARD_LED_STAGE_*"): 5 s after power-off its turn-off timer, and its
+// suspend callback again, set stage STANDBY_ENTER state 1 = duty = period with the polarity inverted, i.e.
+// fully lit whatever the ini says. So the module watches MDrv_PM_PWM_Polarity_Ex with an ftrace hook (no
+// kprobes on this kernel); when mik.ko calls it while the screen is off, thread ledctl_fix paints the standby
+// mode again 1-2 ms later. With the screen on it re-applies a set "while on" mode the same way (on_led >= 0).
+// While the screen is off the driver's resume values hold the standby mode as well, so a background wake-up
+// keeps it from the driver's resume callback on (restored at screen-on; the PM firmware itself may still light
+// the LED for a moment between the wake-up and the kernel's resume, that part is outside the kernel).
+// If mik.ko or ftrace is missing, the module works as before without the hook ("hook:" line in info).
 //   pwm         debug: write "period duty div polarity" (hex or dec) to program the PWM right now
 //   info        read-only: what was found, current values, or why the module refused
 //   probe_only  1 at insmod: run every check, write nothing, print "probe ok" and fail with ECANCELED
@@ -38,6 +51,8 @@
 #include <linux/moduleparam.h>
 #include <linux/mutex.h>
 #include <linux/err.h>
+#include <linux/ftrace.h>
+#include <linux/sched.h>
 
 enum { F_DIV, F_PERIOD, F_DUTY, F_POL, F_N };
 static const char *const fsym[F_N] = { "MDrv_PM_PWM_Div_Ex", "MDrv_PM_PWM_Period_Ex",
@@ -60,6 +75,11 @@ typedef int (*task_fn_t)(struct task_struct *);
 typedef bool (*should_stop_t)(void);
 typedef unsigned long (*msleep_t)(unsigned int ms);
 typedef void (*mutex_fn_t)(struct mutex *);
+typedef int (*ftrace_reg_t)(struct ftrace_ops *);
+typedef int (*ftrace_filter_t)(struct ftrace_ops *, unsigned char *, int, int);
+typedef struct module *(*mod_addr_t)(unsigned long);
+typedef long (*sched_timeout_t)(long);
+typedef void (*usleep_t)(unsigned long, unsigned long);
 
 static probe_read_t safe_read;
 static pwm_fn_t pwm_set[F_N], pwm_enable, pwm_dben;
@@ -78,12 +98,23 @@ static u8 *priv;                 /* driver private struct, valid only after a su
 static struct fn_layout sus, res;
 static struct pwm_vals orig_sus, orig_res;
 static u32 chan;
-static char status[400] = "not initialised";
+static char status[560] = "not initialised";
 
 static int sleep_led, sleep_level = 100, sleep_speed = 100;
 static int on_led = -1, on_level = 100, on_speed = 100, screen_on = 1, probe_only;
 static bool on_touched;
 static struct task_struct *blink_task;
+
+/* hook on mik.ko's LED writes (see the header) */
+static ftrace_reg_t f_register, f_unregister;
+static sched_timeout_t k_sched_timeout;
+static usleep_t k_usleep;
+static unsigned long mik_text, mik_text_size;  /* mik.ko core text: callers in it are the TV service */
+static struct task_struct *fix_task;
+static int fix_pending, in_suspend;
+static unsigned long hook_hits;
+static bool hook_on;
+static char hook_status[120] = "hook: off";
 
 /* ---------------- AArch64 decoding ---------------- */
 static bool dec_bl(u32 w, unsigned long pc, unsigned long *tgt)
@@ -298,14 +329,36 @@ static void stop_blink(void)         /* led_lock held */
 	}
 }
 
+static bool standby_now(void)
+{
+	return !READ_ONCE(screen_on) || READ_ONCE(in_suspend);
+}
+
+static void paint_standby(void)      /* led_lock held: show the standby mode right now */
+{
+	struct pwm_vals p;
+	if (!priv)
+		return;
+	stop_blink();
+	mode_vals(sleep_led, sleep_level, sleep_speed, &p);
+	pwm_program(&p);
+	write_set(&res, &p);             /* the driver's resume callback, first LED write after a wake-up, */
+	on_touched = true;               /* then shows it too (restored when the screen comes on)          */
+}
+
 static void apply_on(void)           /* led_lock held */
 {
 	struct pwm_vals p;
 	if (!priv)
 		return;
-	if (on_led != 2 || !screen_on)
+	if (on_led != 2 || standby_now())
 		stop_blink();
-	if (on_led < 0 || !screen_on) {  /* stock, or screen off: hand the LED back in its normal (dark) state */
+	if (standby_now()) {             /* screen off: the standby mode, even while the CPU is still awake */
+		paint_standby();
+		return;
+	}
+	write_set(&res, &orig_res);
+	if (on_led < 0) {                /* stock: hand the LED back in its normal (dark) state */
 		if (on_touched) {
 			pwm_program(&orig_res);
 			on_touched = false;
@@ -321,6 +374,116 @@ static void apply_on(void)           /* led_lock held */
 	pwm_program(&p);
 }
 
+static void apply_sleep_now(void)    /* led_lock held: a standby setting changed */
+{
+	apply_sleep();
+	if (standby_now())
+		paint_standby();
+}
+
+/* ---------------- hook on mik.ko's LED writes ---------------- */
+/* Woken by the hook; 1-2 ms later (mik.ko has finished its Polarity + Enable sequence by then) it shows the mode
+ * the LED should have now. Not freezable on purpose: mik.ko's suspend callback runs after the freezer. */
+static int fix_fn(void *unused)
+{
+	while (!k_should_stop()) {
+		set_current_state(TASK_INTERRUPTIBLE);
+		if (!READ_ONCE(fix_pending) && !k_should_stop())
+			k_sched_timeout(MAX_SCHEDULE_TIMEOUT);
+		__set_current_state(TASK_RUNNING);
+		if (!xchg(&fix_pending, 0))
+			continue;
+		if (k_usleep)
+			k_usleep(1000, 2000);
+		else
+			k_msleep(20);
+		xchg(&fix_pending, 0);       /* writes during this wait are covered by this pass */
+		lock();
+		if (standby_now())
+			paint_standby();
+		else if (on_led >= 0)
+			apply_on();
+		unlock();
+	}
+	return 0;
+}
+
+static void hook_fn(unsigned long ip, unsigned long parent_ip, struct ftrace_ops *op, struct pt_regs *regs)
+{
+	if (parent_ip - mik_text >= mik_text_size)
+		return;                      /* the kernel's pwm_backlight or ledctl itself */
+	hook_hits++;
+	if (standby_now() || READ_ONCE(on_led) >= 0) {
+		WRITE_ONCE(fix_pending, 1);
+		k_wake(fix_task);
+	}
+}
+static struct ftrace_ops hook_ops = { .func = hook_fn };
+
+static void hook_init(void)
+{
+	static unsigned char target[] = "MDrv_PM_PWM_Polarity_Ex";
+	ftrace_filter_t set_filter = (ftrace_filter_t)kallsyms_lookup_name("ftrace_set_filter");
+	mod_addr_t mod_addr = (mod_addr_t)kallsyms_lookup_name("__module_address");
+	unsigned long mik_fn = kallsyms_lookup_name("mi_pm_SetLedControl");
+	struct module *m;
+	struct task_struct *t;
+
+	f_register = (ftrace_reg_t)kallsyms_lookup_name("register_ftrace_function");
+	f_unregister = (ftrace_reg_t)kallsyms_lookup_name("unregister_ftrace_function");
+	k_sched_timeout = (sched_timeout_t)kallsyms_lookup_name("schedule_timeout");
+	k_usleep = (usleep_t)kallsyms_lookup_name("usleep_range");
+	if (!set_filter || !mod_addr || !f_register || !f_unregister || !k_sched_timeout) {
+		scnprintf(hook_status, sizeof(hook_status), "%s", "hook: off (ftrace symbols not found)");
+		return;
+	}
+	if (!mik_fn) {
+		scnprintf(hook_status, sizeof(hook_status), "%s", "hook: off (mik.ko mi_pm_SetLedControl not found)");
+		return;
+	}
+	__preempt_count_inc();               /* __module_address() needs preemption off; preempt_disable() */
+	barrier();                           /* is a call with CONFIG_DEBUG_PREEMPT, this is inline          */
+	m = mod_addr(mik_fn);
+	if (m) {
+		mik_text = (unsigned long)m->core_layout.base;
+		mik_text_size = m->core_layout.text_size;
+	}
+	barrier();
+	__preempt_count_dec();               /* no resched check needed for this one-off lookup */
+	if (!m || !mik_text_size || mik_fn - mik_text >= mik_text_size) {
+		mik_text = mik_text_size = 0;
+		scnprintf(hook_status, sizeof(hook_status), "%s", "hook: off (mik.ko text not found)");
+		return;
+	}
+	t = k_create(fix_fn, NULL, -1, "ledctl_fix");
+	if (IS_ERR_OR_NULL(t)) {
+		scnprintf(hook_status, sizeof(hook_status), "%s", "hook: off (no thread)");
+		return;
+	}
+	fix_task = t;
+	k_wake(t);
+	if (set_filter(&hook_ops, target, sizeof(target) - 1, 1) || f_register(&hook_ops)) {
+		k_stop(fix_task);
+		fix_task = NULL;
+		scnprintf(hook_status, sizeof(hook_status), "%s", "hook: off (ftrace refused the filter)");
+		return;
+	}
+	hook_on = true;
+	scnprintf(hook_status, sizeof(hook_status), "hook: on %s, mik.ko text %#lx+%#lx", target, mik_text, mik_text_size);
+}
+
+static void hook_exit(void)          /* not under led_lock: fix_fn takes it */
+{
+	if (hook_on) {
+		f_unregister(&hook_ops);     /* returns once no callback runs any more */
+		hook_on = false;
+	}
+	if (fix_task) {
+		k_stop(fix_task);
+		fix_task = NULL;
+	}
+}
+
 static void make_status(void)
 {
 	struct pwm_vals s, r;
@@ -329,12 +492,13 @@ static void make_status(void)
 	scnprintf(status, sizeof(status),
 		  "ok ch=%u support@%#x priv@%#x\n"
 		  "suspend div@%#x period@%#x duty@%#x pol@%#x = %#x %#x %#x %u (orig %#x %#x %#x %u)\n"
-		  "resume  div@%#x period@%#x duty@%#x pol@%#x = %#x %#x %#x %u (orig %#x %#x %#x %u)\n",
+		  "resume  div@%#x period@%#x duty@%#x pol@%#x = %#x %#x %#x %u (orig %#x %#x %#x %u)\n"
+		  "%s, %lu calls from mik.ko\n",
 		  chan, sus.support, sus.privoff,
 		  sus.off[0], sus.off[1], sus.off[2], sus.off[3], s.v[0], s.v[1], s.v[2], s.v[3],
 		  orig_sus.v[0], orig_sus.v[1], orig_sus.v[2], orig_sus.v[3],
 		  res.off[0], res.off[1], res.off[2], res.off[3], r.v[0], r.v[1], r.v[2], r.v[3],
-		  orig_res.v[0], orig_res.v[1], orig_res.v[2], orig_res.v[3]);
+		  orig_res.v[0], orig_res.v[1], orig_res.v[2], orig_res.v[3], hook_status, hook_hits);
 }
 
 /* ---------------- parameters ---------------- */
@@ -364,9 +528,9 @@ static int get_int(char *buf, const struct kernel_param *kp)
 	static const struct kernel_param_ops ops_##name = { .set = set_##name, .get = get_int }; \
 	module_param_cb(name, &ops_##name, &name, 0644)
 
-INT_PARAM(sleep_led, 0, 2, apply_sleep());
-INT_PARAM(sleep_level, 1, 100, apply_sleep());
-INT_PARAM(sleep_speed, 50, 400, apply_sleep());
+INT_PARAM(sleep_led, 0, 2, apply_sleep_now());
+INT_PARAM(sleep_level, 1, 100, apply_sleep_now());
+INT_PARAM(sleep_speed, 50, 400, apply_sleep_now());
 INT_PARAM(on_led, -1, 2, apply_on());
 INT_PARAM(on_level, 1, 100, apply_on());
 INT_PARAM(on_speed, 50, 400, apply_on());
@@ -423,8 +587,15 @@ static int ledctl_pm(struct notifier_block *nb, unsigned long ev, void *unused)
 {
 	if (ev == PM_SUSPEND_PREPARE || ev == PM_HIBERNATION_PREPARE) {
 		lock();
-		stop_blink();        /* nothing may reprogram the LED after the driver's suspend callback */
+		WRITE_ONCE(in_suspend, 1);
 		apply_sleep();
+		paint_standby();     /* also stops blinking: nothing may reprogram the LED after the driver's suspend callback */
+		unlock();
+	} else if (ev == PM_POST_SUSPEND || ev == PM_POST_HIBERNATION) {
+		lock();
+		WRITE_ONCE(in_suspend, 0);
+		if (!screen_on)      /* woke up with the screen off (Doze, network, timer): keep the standby mode */
+			paint_standby();
 		unlock();
 	}
 	return NOTIFY_DONE;
@@ -522,6 +693,7 @@ static int __init ledctl_init(void)
 	ret = reg(&ledctl_nb);
 	if (ret)
 		return fail(ret, "register_pm_notifier failed");
+	hook_init();
 	lock();
 	apply_sleep();
 	apply_on();
@@ -536,6 +708,7 @@ static void __exit ledctl_exit(void)
 	pm_notifier_reg_t unreg = (pm_notifier_reg_t)kallsyms_lookup_name("unregister_pm_notifier");
 	if (unreg)
 		unreg(&ledctl_nb);
+	hook_exit();
 	lock();
 	stop_blink();
 	if (priv) {
