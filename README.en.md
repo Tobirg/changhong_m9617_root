@@ -44,7 +44,7 @@ Rooting TVs with the **MT5889** SoC and the **MStar MBOOT (U-Boot 2011.06)** boo
 | **Manual** | full patch of a picked `BOOT_*.IMG` with the `skip_initramfs` fix, or only the fix for an image Magisk already patched |
 | **Magisk** | downloads the latest release from GitHub and installs it |
 | **Reboot into MBOOT** | through the TV's own adb, no root needed |
-| **Power LED** | after root: off / on / blink in standby and while on, brightness, no boot changes: [docs/led.md](docs/led.md) (in Russian) |
+| **Power LED** | Tuvio TO48/55/65UFGCV5, after root: off / on / blink in standby and while on, brightness, no boot changes: [docs/led.md](docs/led.md) (in Russian) |
 | **Agents** | the same process over adb with JSON answers, plus scripts for the MBOOT console: [docs/agent.md](docs/agent.md) |
 
 The `skip_initramfs` fix: this MBOOT version puts `skip_initramfs` on the kernel command line, which makes Magisk pick the wrong boot mode. RootMate changes it to `skip_initramfz` inside magiskinit.

@@ -330,7 +330,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun updateLedButton() {
         val prefs = getSharedPreferences(PREFS_LED, MODE_PRIVATE)
-        val key = Led.probeCacheKey()
+        val key = Led.probeCacheKey(this)
         when (prefs.getString(key, null)) {
             LED_YES -> return showLedButton(true)
             LED_NO -> return showLedButton(false)

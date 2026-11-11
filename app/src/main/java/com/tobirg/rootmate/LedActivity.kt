@@ -128,7 +128,7 @@ class LedActivity : AppCompatActivity() {
         status.setText(R.string.led_status_checking)
         status.setTextColor(getColor(R.color.text_secondary))
         worker.execute {
-            val s = Led.read()
+            val s = Led.read(this)
             runOnUiThread { if (!isDestroyed) show(s) }
         }
     }
@@ -157,6 +157,8 @@ class LedActivity : AppCompatActivity() {
         removeBtn.visibility = if (s.root && s.installed) View.VISIBLE else View.GONE
 
         values.putAll(s.values)
+        // MaterialButton ignores setChecked while disabled: enable first, select, then apply the real state
+        setControlsEnabled(true)
         updating = true
         sleepModes.entries.firstOrNull { it.value == values["sleep_led"] }?.let { sleepGroup.check(it.key) }
         onModes.entries.firstOrNull { it.value == values["on_led"] }?.let { onGroup.check(it.key) }

@@ -208,14 +208,14 @@
     <!-- Power LED screen (LedActivity, ledctl kernel module) -->
     <string name="led_button">Индикатор питания</string>
     <string name="led_title">Индикатор питания</string>
-    <string name="led_module_title">Модуль ядра ledctl</string>
-    <string name="led_module_desc">Управляет индикатором без изменения boot-образа. При загрузке сам проверяет ядро и ничего не трогает, если оно не подходит. Нужен root (Magisk).</string>
+    <string name="led_module_title">Tuvio power LED control</string>
+    <string name="led_module_desc">Индикатор питания телевизоров Tuvio TO48/55/65UFGCV5, без изменения boot-образа. Нужен root (Magisk).</string>
     <string name="led_status_checking">Проверка…</string>
     <string name="led_status_installing">Установка…</string>
     <string name="led_status_no_root">Нет root-доступа: разрешите RootMate в Magisk</string>
     <string name="led_status_not_installed">Не установлен</string>
     <string name="led_status_ok">Работает (версия %1$s)</string>
-    <string name="led_status_update">Установлена старая версия %1$s</string>
+    <string name="led_status_update">Установлена другая сборка модуля (%1$s)</string>
     <string name="led_status_not_loaded">Не загружен: %1$s</string>
     <string name="led_status_failed">Ядро не подходит: %1$s</string>
     <string name="led_install">Установить</string>
@@ -226,7 +226,7 @@
     <string name="led_remove_yes">Удалить</string>
     <string name="led_cancel">Отмена</string>
     <string name="led_sleep_title">В режиме сна</string>
-    <string name="led_on_title">Когда телевизор включён</string>
+    <string name="led_on_title">В работе</string>
     <string name="led_mode_stock">Как в прошивке</string>
     <string name="led_mode_off">Не горит</string>
     <string name="led_mode_on">Горит</string>

@@ -208,14 +208,14 @@
     <!-- Power LED screen (LedActivity, ledctl kernel module) -->
     <string name="led_button">Power LED</string>
     <string name="led_title">Power LED</string>
-    <string name="led_module_title">ledctl kernel module</string>
-    <string name="led_module_desc">Controls the LED without changing the boot image. It checks the kernel when loading and changes nothing if the kernel does not match. Needs root (Magisk).</string>
+    <string name="led_module_title">Tuvio power LED control</string>
+    <string name="led_module_desc">Power LED of Tuvio TO48/55/65UFGCV5 TVs, without changing the boot image. Needs root (Magisk).</string>
     <string name="led_status_checking">Checking…</string>
     <string name="led_status_installing">Installing…</string>
     <string name="led_status_no_root">No root access: allow RootMate in Magisk</string>
     <string name="led_status_not_installed">Not installed</string>
     <string name="led_status_ok">Running (version %1$s)</string>
-    <string name="led_status_update">Old version %1$s installed</string>
+    <string name="led_status_update">A different module build is installed (%1$s)</string>
     <string name="led_status_not_loaded">Not loaded: %1$s</string>
     <string name="led_status_failed">Kernel not supported: %1$s</string>
     <string name="led_install">Install</string>
@@ -226,7 +226,7 @@
     <string name="led_remove_yes">Remove</string>
     <string name="led_cancel">Cancel</string>
     <string name="led_sleep_title">In standby</string>
-    <string name="led_on_title">While the TV is on</string>
+    <string name="led_on_title">While on</string>
     <string name="led_mode_stock">Stock</string>
     <string name="led_mode_off">Off</string>
     <string name="led_mode_on">On</string>

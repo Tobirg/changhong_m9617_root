@@ -14,7 +14,7 @@ object Led {
     const val MOD = "/data/adb/modules/ledctl"
     private const val PAR = "/sys/module/ledctl/parameters"
     /** module.prop "version" of the module shipped in assets/ledctl */
-    const val BUNDLED_VERSION = "2.1"
+    const val BUNDLED_VERSION = "1.0"
 
     enum class Probe { SUPPORTED, UNSUPPORTED, NO_ROOT }
 
@@ -41,10 +41,10 @@ object Led {
         }
     }
 
-    /** The probe answer holds for one kernel build and one module version. */
-    fun probeCacheKey(): String {
+    /** The probe answer holds for one kernel build and one build of the bundled module (by checksum, not version). */
+    fun probeCacheKey(context: Context): String {
         val u = runCatching { android.system.Os.uname() }.getOrNull()
-        return "probe|${u?.release}|${u?.version}|$BUNDLED_VERSION"
+        return "probe|${u?.release}|${u?.version}|${bundledSums(context)["ledctl.ko"]}"
     }
 
     val KEYS = listOf("sleep_led", "sleep_level", "on_led", "on_level")
@@ -58,15 +58,30 @@ object Led {
         /** why the kernel or the module refused to load, if it did */
         val error: String?,
         val values: Map<String, Int>,
+        /** an installed file differs from the one in assets/ledctl (the version stays 1.0 until a release) */
+        val filesDiffer: Boolean = false,
     ) {
-        val needsUpdate get() = installed && installedVersion != BUNDLED_VERSION
+        val needsUpdate get() = installed && (installedVersion != BUNDLED_VERSION || filesDiffer)
     }
 
-    fun read(): State {
+    /** MD5 of every file shipped in assets/ledctl, by name. */
+    private fun bundledSums(context: Context): Map<String, String> =
+        context.assets.list("ledctl").orEmpty().associateWith { name ->
+            val md = java.security.MessageDigest.getInstance("MD5")
+            context.assets.open("ledctl/$name").use { i ->
+                val buf = ByteArray(8192)
+                while (true) { val n = i.read(buf); if (n < 0) break; md.update(buf, 0, n) }
+            }
+            md.digest().joinToString("") { "%02x".format(it) }
+        }
+
+    fun read(context: Context): State {
+        val sums = bundledSums(context)
         val r = Root.run(
             """
             M=$MOD; P=$PAR
             echo ROOT=1
+            for f in ${sums.keys.joinToString(" ")}; do echo "SUM_${'$'}f=${'$'}(md5sum ${'$'}M/${'$'}f 2>/dev/null | cut -d' ' -f1)"; done
             [ -f ${'$'}M/ledctl.ko ] && echo INSTALLED=1
             echo VERSION=${'$'}(sed -n 's/^version=//p' ${'$'}M/module.prop 2>/dev/null)
             [ -d ${'$'}P ] && echo LOADED=1
@@ -84,7 +99,8 @@ object Led {
         val values = KEYS.associateWith { k -> kv["V_$k"]?.toIntOrNull() ?: DEFAULTS.getValue(k) }
         val loaded = kv["LOADED"] == "1"
         val error = if (loaded) null else (kv["REFUSED"].orEmpty().ifEmpty { kv["INSMOD"].orEmpty() }).ifEmpty { null }
-        return State(true, kv["INSTALLED"] == "1", kv["VERSION"]?.ifEmpty { null }, loaded, error, values)
+        val differs = sums.any { (name, sum) -> kv["SUM_$name"] != sum }
+        return State(true, kv["INSTALLED"] == "1", kv["VERSION"]?.ifEmpty { null }, loaded, error, values, differs)
     }
 
     /**
