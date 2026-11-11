@@ -48,6 +48,11 @@
             android:theme="@style/Theme.RootMate" />
 
         <activity
+            android:name=".LedActivity"
+            android:exported="false"
+            android:theme="@style/Theme.RootMate" />
+
+        <activity
             android:name=".PermissionsActivity"
             android:exported="false"
             android:theme="@style/Theme.RootMate" />

@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
 
     private val allButtonIds = listOf(
         R.id.btnUartMenu, R.id.btnInstallMagisk, R.id.btnFullPatch, R.id.btnPickInput,
-        R.id.btnUninstall, R.id.btnNextStep, R.id.btnChangeDrive, R.id.btnModeAuto, R.id.btnModeManual
+        R.id.btnUninstall, R.id.btnLed, R.id.btnNextStep, R.id.btnChangeDrive, R.id.btnModeAuto, R.id.btnModeManual
     )
 
     /** Must be called on the UI thread. Locks the UI and runs [block] on a worker thread. */
@@ -198,6 +198,7 @@ class MainActivity : AppCompatActivity() {
             withMagisk { withStoragePermission { launchPicker("manual") } }
         }
         findViewById<Button>(R.id.btnUninstall).setOnClickListener { uninstallSelf() }
+        findViewById<Button>(R.id.btnLed).setOnClickListener { startActivity(Intent(this, LedActivity::class.java)) }
 
         val gatedByStorage = listOf(R.id.btnFullPatch, R.id.btnPickInput)
         allButtonIds.forEach { id ->

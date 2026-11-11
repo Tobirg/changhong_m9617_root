@@ -205,4 +205,33 @@
     <string name="perm_adb_hint_dev">Press \"Build\" 7 times until \"You are now a developer\", then come back to RootMate.</string>
     <string name="perm_adb_hint_usb">Turn on \"USB debugging\" (the \"Debugging\" section), then come back to RootMate.</string>
     <string name="agent_cmd_log">Command over adb: %1$s</string>
+    <!-- Power LED screen (LedActivity, ledctl kernel module) -->
+    <string name="led_button">Power LED</string>
+    <string name="led_title">Power LED</string>
+    <string name="led_module_title">ledctl kernel module</string>
+    <string name="led_module_desc">Controls the LED without changing the boot image. It checks the kernel when loading and changes nothing if the kernel does not match. Needs root (Magisk).</string>
+    <string name="led_status_checking">Checking…</string>
+    <string name="led_status_installing">Installing…</string>
+    <string name="led_status_no_root">No root access: allow RootMate in Magisk</string>
+    <string name="led_status_not_installed">Not installed</string>
+    <string name="led_status_ok">Running (version %1$s)</string>
+    <string name="led_status_update">Old version %1$s installed</string>
+    <string name="led_status_not_loaded">Not loaded: %1$s</string>
+    <string name="led_status_failed">Kernel not supported: %1$s</string>
+    <string name="led_install">Install</string>
+    <string name="led_update">Update</string>
+    <string name="led_reload">Load again</string>
+    <string name="led_remove">Remove module</string>
+    <string name="led_remove_confirm">Remove the module? The LED goes back to the stock behaviour.</string>
+    <string name="led_remove_yes">Remove</string>
+    <string name="led_cancel">Cancel</string>
+    <string name="led_sleep_title">In standby</string>
+    <string name="led_on_title">While the TV is on</string>
+    <string name="led_mode_stock">Stock</string>
+    <string name="led_mode_off">Off</string>
+    <string name="led_mode_on">On</string>
+    <string name="led_mode_blink">Blink</string>
+    <string name="led_level">Brightness: %1$d %%</string>
+    <string name="led_on_note">After the screen turns on, the firmware shows its own LED state for a fraction of a second, then ledctl restores the chosen one. Brightness applies to the "On" mode only.</string>
+    <string name="led_set_failed">Could not apply the setting</string>
 </resources>

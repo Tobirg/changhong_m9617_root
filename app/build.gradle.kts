@@ -11,8 +11,8 @@ android {
         applicationId = "com.tobirg.rootmate"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.0"
+        versionCode = 4
+        versionName = "1.1"
     }
 
     // Permanent release key (CI passes it via env from GitHub secrets) so that updates install over

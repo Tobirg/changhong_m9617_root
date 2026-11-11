@@ -89,6 +89,50 @@
         <item name="strokeColor">@color/accent</item>
     </style>
 
+    <!-- Power LED screen: segmented mode switches and the brightness stepper. -->
+    <style name="LedGroup">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">8dp</item>
+    </style>
+
+    <style name="LedModeButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/mode_text</item>
+        <item name="backgroundTint">@color/mode_bg</item>
+        <item name="strokeColor">@color/accent</item>
+        <item name="cornerRadius">12dp</item>
+    </style>
+
+    <style name="LedLevelText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="LedStepButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:layout_width">64dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:textColor">@color/accent</item>
+        <item name="android:textSize">18sp</item>
+        <item name="cornerRadius">10dp</item>
+        <item name="strokeColor">@color/accent</item>
+    </style>
+
     <!-- Shown under a gated button group when its permission is missing. -->
     <style name="PermissionCaption">
         <item name="android:layout_gravity">center_horizontal</item>
