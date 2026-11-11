@@ -1,6 +1,6 @@
 id=ledctl
 name=Power LED control (ledctl)
-version=2.0
-versionCode=2
+version=2.1
+versionCode=3
 author=RootMate
 description=Power/standby LED modes and brightness via ledctl.ko (no boot patch). Settings: RootMate app or ledctl.conf.

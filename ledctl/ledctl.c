@@ -18,6 +18,8 @@
 //   on_level    1..100 brightness while on                                [default 100]
 //   pwm         debug: write "period duty div polarity" (hex or dec) to program the PWM right now
 //   info        read-only: what was found, current values, or why the module refused
+//   probe_only  1 at insmod: run every check, write nothing, print "probe ok" and fail with ECANCELED
+//               (insmod: "Operation canceled") - how RootMate tells a supported TV without changing it
 // rmmod restores everything the driver had when the module was loaded.
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -53,7 +55,7 @@ static struct pwm_vals orig_sus, orig_res;
 static u32 chan;
 static char status[400] = "not initialised";
 
-static int sleep_led, sleep_level = 100, on_led = -1, on_level = 100;
+static int sleep_led, sleep_level = 100, on_led = -1, on_level = 100, probe_only;
 static bool on_touched;
 
 /* ---------------- AArch64 decoding ---------------- */
@@ -291,6 +293,7 @@ INT_PARAM(sleep_led, 0, 2, apply_sleep());
 INT_PARAM(sleep_level, 1, 100, apply_sleep());
 INT_PARAM(on_led, -1, 2, apply_on());
 INT_PARAM(on_level, 1, 100, apply_on());
+INT_PARAM(probe_only, 0, 1, (void)0);
 
 static int set_pwm(const char *val, const struct kernel_param *kp)
 {
@@ -415,6 +418,11 @@ static int __init ledctl_init(void)
 	    !orig_sus.v[F_PERIOD] || orig_res.v[F_DUTY] > orig_res.v[F_PERIOD])
 		return fail(-EINVAL, "driver data does not look sane");
 
+	if (probe_only) {                          /* dry run for installers: everything checked, nothing written */
+		pr_info("ledctl: probe ok (ch=%u), not staying loaded\n", chan);
+		return -ECANCELED;
+	}
+
 	priv = p;
 	ret = reg(&ledctl_nb);
 	if (ret)
@@ -444,7 +452,7 @@ module_init(ledctl_init);
 module_exit(ledctl_exit);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Standby/power LED control for MStar pwm_backlight");
-MODULE_VERSION("2.0");
+MODULE_VERSION("2.1");
 
 /* ---- what kbuild's modpost would normally generate (ledctl.mod.c) ---- */
 #include <linux/vermagic.h>

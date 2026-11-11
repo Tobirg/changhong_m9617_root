@@ -199,6 +199,7 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.btnUninstall).setOnClickListener { uninstallSelf() }
         findViewById<Button>(R.id.btnLed).setOnClickListener { startActivity(Intent(this, LedActivity::class.java)) }
+        showLedButton(false)  // until the module probe says this TV can run it (updateLedButton)
 
         val gatedByStorage = listOf(R.id.btnFullPatch, R.id.btnPickInput)
         allButtonIds.forEach { id ->
@@ -300,6 +301,7 @@ class MainActivity : AppCompatActivity() {
         updateGatedButtons()
         updateSlotStatus()
         refreshStage(true)
+        updateLedButton()
         // adb (developer options + USB debugging) is checked too: the reboot into MBOOT and the agent mode need it
         Thread {
             val adb = AdbLocal.status(this)
@@ -316,6 +318,49 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var adbStatus: AdbLocal.Status? = null
+
+    private var ledProbeRunning = false
+    private var ledProbeTried = false
+
+    /**
+     * The "Power LED" button is shown only where the bundled ledctl.ko really runs: a dry-run insmod (Led.probe) lets
+     * the kernel check the symbol CRCs and the module do all its own checks without writing anything. Needs root, so
+     * it runs only with Magisk installed, at most once per screen while root is missing; a definite answer is cached
+     * per kernel build and module version.
+     */
+    private fun updateLedButton() {
+        val prefs = getSharedPreferences(PREFS_LED, MODE_PRIVATE)
+        val key = Led.probeCacheKey()
+        when (prefs.getString(key, null)) {
+            LED_YES -> return showLedButton(true)
+            LED_NO -> return showLedButton(false)
+        }
+        showLedButton(false)
+        if (ledProbeRunning || ledProbeTried || !isMagiskInstalled()) return
+        ledProbeRunning = true
+        Thread {
+            val r = Led.probe(this)
+            runOnUiThread {
+                ledProbeRunning = false
+                ledProbeTried = true
+                if (r != Led.Probe.NO_ROOT) {
+                    prefs.edit().putString(key, if (r == Led.Probe.SUPPORTED) LED_YES else LED_NO).apply()
+                }
+                showLedButton(r == Led.Probe.SUPPORTED)
+            }
+        }.start()
+    }
+
+    /** Without the LED button the uninstall button gets its old 2/3-width row back. */
+    private fun showLedButton(show: Boolean) {
+        findViewById<View>(R.id.btnLed).visibility = if (show) View.VISIBLE else View.GONE
+        val uninstall = findViewById<View>(R.id.btnUninstall)
+        (uninstall.parent as? android.widget.LinearLayout)?.weightSum = if (show) 2f else 3f
+        (uninstall.layoutParams as? android.widget.LinearLayout.LayoutParams)?.let {
+            it.weight = if (show) 1f else 2f
+            uninstall.layoutParams = it
+        }
+    }
 
     private fun magiskInfo() = try {
         packageManager.getPackageInfo("com.topjohnwu.magisk", 0)
@@ -1525,5 +1570,8 @@ class MainActivity : AppCompatActivity() {
 
     private companion object {
         const val KEY_MODE = "mode"
+        const val PREFS_LED = "led"
+        const val LED_YES = "supported"
+        const val LED_NO = "unsupported"
     }
 }

@@ -14,7 +14,38 @@ object Led {
     const val MOD = "/data/adb/modules/ledctl"
     private const val PAR = "/sys/module/ledctl/parameters"
     /** module.prop "version" of the module shipped in assets/ledctl */
-    const val BUNDLED_VERSION = "2.0"
+    const val BUNDLED_VERSION = "2.1"
+
+    enum class Probe { SUPPORTED, UNSUPPORTED, NO_ROOT }
+
+    /**
+     * Dry run of the bundled module (insmod probe_only=1): the kernel checks the symbol CRCs (the kernel release in
+     * vermagic is not compared when modversions are on, so it says nothing), then the module disassembles the
+     * driver and validates the device and values, writes nothing and fails with ECANCELED ("Operation canceled").
+     * Any other result means it would refuse to run here. A loaded ledctl counts as supported (it passed the same).
+     */
+    fun probe(context: Context): Probe {
+        val ko = File(context.cacheDir, "ledctl_probe.ko")
+        context.assets.open("ledctl/ledctl.ko").use { i -> ko.outputStream().use { i.copyTo(it) } }
+        val r = Root.run(
+            """
+            echo ROOT=1
+            if [ -d $PAR ]; then echo PROBE_LOADED; else insmod ${ko.absolutePath} probe_only=1 2>&1; fi
+            """.trimIndent()
+        )
+        ko.delete()
+        return when {
+            !r.out.contains("ROOT=1") -> Probe.NO_ROOT
+            r.out.contains("PROBE_LOADED") || r.out.contains("operation cancel", ignoreCase = true) -> Probe.SUPPORTED
+            else -> Probe.UNSUPPORTED
+        }
+    }
+
+    /** The probe answer holds for one kernel build and one module version. */
+    fun probeCacheKey(): String {
+        val u = runCatching { android.system.Os.uname() }.getOrNull()
+        return "probe|${u?.release}|${u?.version}|$BUNDLED_VERSION"
+    }
 
     val KEYS = listOf("sleep_led", "sleep_level", "on_led", "on_level")
     val DEFAULTS = mapOf("sleep_led" to 0, "sleep_level" to 100, "on_led" to -1, "on_level" to 100)
