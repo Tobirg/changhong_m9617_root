@@ -1,4 +1,5 @@
-// ledctl.ko v2 - power/standby LED control for MStar/MediaTek TVs whose LED is driven by the kernel's
+// ledctl.ko v2 - power LED control for Tuvio TO55UFGCV5 (also TO48UFGCV5 and TO65UFGCV5): MT5889 TVs
+// whose standby LED is driven by the kernel's
 // pwm_backlight driver ("led-pwm-control-*" device-tree properties, PM PWM via MDrv_PM_PWM_*_Ex).
 // No boot image patching: the driver caches the DT values at probe in its private struct and programs them
 // in pwm_backlight_suspend()/_resume(); this module rewrites that cache and can drive the PWM directly.
@@ -451,7 +452,7 @@ static void __exit ledctl_exit(void)
 module_init(ledctl_init);
 module_exit(ledctl_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Standby/power LED control for MStar pwm_backlight");
+MODULE_DESCRIPTION("Power LED control for Tuvio TO55UFGCV5 / TO48UFGCV5 / TO65UFGCV5 (MT5889 pwm_backlight)");
 MODULE_VERSION("2.1");
 
 /* ---- what kbuild's modpost would normally generate (ledctl.mod.c) ---- */

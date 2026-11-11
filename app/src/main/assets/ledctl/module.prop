@@ -3,4 +3,4 @@ name=Power LED control (ledctl)
 version=2.1
 versionCode=3
 author=RootMate
-description=Power/standby LED modes and brightness via ledctl.ko (no boot patch). Settings: RootMate app or ledctl.conf.
+description=Power LED for Tuvio TO55UFGCV5 / TO48UFGCV5 / TO65UFGCV5: off, on or blink in standby and while on, brightness, via ledctl.ko (no boot patch). Settings: RootMate app or ledctl.conf.
